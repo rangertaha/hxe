@@ -11,3 +11,4 @@ desktop/src-tauri/node_modules
 .vscode
 .env
 .env.local
+.cursor

@@ -10,18 +10,18 @@ import (
 )
 
 type Program struct {
-	Svc *services.Program
+	Prog *services.Program
 }
 
 func NewProgram(b internal.Broker) *Program {
 	return &Program{
-		Svc: services.NewProgram(b),
+		Prog: services.NewProgram(b),
 	}
 }
 
 // CRUD HANDLERS
 func (h *Program) List(c echo.Context) error {
-	programs, err := h.Svc.List()
+	programs, err := h.Prog.List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -29,7 +29,7 @@ func (h *Program) List(c echo.Context) error {
 }
 
 func (h *Program) Get(c echo.Context) error {
-	program, err := h.Svc.Get(c.Param("id"))
+	program, err := h.Prog.Get(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -41,7 +41,7 @@ func (h *Program) Create(c echo.Context) error {
 	if err := c.Bind(&prog); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	program, err := h.Svc.Create(prog)
+	program, err := h.Prog.Create(prog)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -53,7 +53,7 @@ func (h *Program) Update(c echo.Context) error {
 	if err := c.Bind(&prog); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	program, err := h.Svc.Update(c.Param("id"), prog)
+	program, err := h.Prog.Update(c.Param("id"), prog)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -61,7 +61,7 @@ func (h *Program) Update(c echo.Context) error {
 }
 
 func (h *Program) Delete(c echo.Context) error {
-	err := h.Svc.Delete(c.Param("id"))
+	err := h.Prog.Delete(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -69,7 +69,7 @@ func (h *Program) Delete(c echo.Context) error {
 }
 
 func (h *Program) Schema(c echo.Context) error {
-	schema, err := h.Svc.Schema()
+	schema, err := h.Prog.Schema()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -78,7 +78,7 @@ func (h *Program) Schema(c echo.Context) error {
 
 // RUNTIME HANDLERS
 func (h *Program) Start(c echo.Context) error {
-	program, err := h.Svc.Start(c.Param("id"))
+	program, err := h.Prog.Start(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -86,7 +86,7 @@ func (h *Program) Start(c echo.Context) error {
 }
 
 func (h *Program) Stop(c echo.Context) error {
-	program, err := h.Svc.Stop(c.Param("id"))
+	program, err := h.Prog.Stop(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -94,7 +94,7 @@ func (h *Program) Stop(c echo.Context) error {
 }
 
 func (h *Program) Restart(c echo.Context) error {
-	program, err := h.Svc.Restart(c.Param("id"))
+	program, err := h.Prog.Restart(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -102,7 +102,7 @@ func (h *Program) Restart(c echo.Context) error {
 }
 
 func (h *Program) Status(c echo.Context) error {
-	program, err := h.Svc.Status(c.Param("id"))
+	program, err := h.Prog.Status(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -110,7 +110,7 @@ func (h *Program) Status(c echo.Context) error {
 }
 
 func (h *Program) Reload(c echo.Context) error {
-	err := h.Svc.Reload(c.Param("id"))
+	err := h.Prog.Reload(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -118,7 +118,7 @@ func (h *Program) Reload(c echo.Context) error {
 }
 
 func (h *Program) Enable(c echo.Context) error {
-	err := h.Svc.Enable(c.Param("id"))
+	err := h.Prog.Enable(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -126,7 +126,7 @@ func (h *Program) Enable(c echo.Context) error {
 }
 
 func (h *Program) Disable(c echo.Context) error {
-	err := h.Svc.Disable(c.Param("id"))
+	err := h.Prog.Disable(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -135,7 +135,7 @@ func (h *Program) Disable(c echo.Context) error {
 
 // STREAM HANDLERS
 func (h *Program) Shell(c echo.Context) error {
-	err := h.Svc.Shell(c.Param("id"))
+	err := h.Prog.Shell(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -143,7 +143,7 @@ func (h *Program) Shell(c echo.Context) error {
 }
 
 func (h *Program) Tail(c echo.Context) error {
-	err := h.Svc.Tail(c.Param("id"))
+	err := h.Prog.Tail(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -151,7 +151,7 @@ func (h *Program) Tail(c echo.Context) error {
 }
 
 func (h *Program) Run(c echo.Context) error {
-	err := h.Svc.Run(c.Param("id"))
+	err := h.Prog.Run(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

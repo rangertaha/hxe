@@ -91,95 +91,7 @@ func (p *Program) Delete(id string) error {
 
 // Schema returns the schema of a program
 func (p *Program) Schema() (*models.Schema, error) {
-	// Return a sample program with all fields for schema documentation
-	// schema := &models.Schema{
-	// 	Name:        "Example Program",
-	// 	Description: "Example program description",
-	// 	Command:     "/usr/bin/example",
-	// 	Args:        "--arg1 value1 --arg2 value2",
-	// 	WorkingDir:  "/tmp",
-	// 	User:        "nobody",
-	// 	Group:       "nobody",
-	// 	Status:      "stopped",
-	// 	PID:         0,
-	// 	ExitCode:    0,
-	// 	StartTime:   0,
-	// 	EndTime:     0,
-	// 	Autostart:   false,
-	// 	Enabled:     true,
-	// 	Retries:     0,
-	// 	MaxRetries:  3,
-	// }
-
-	schema := &models.Schema{
-		Properties: []models.Property{
-			{
-				Name:        "name",
-				Label:       "Name",
-				Description: "The name of the program",
-				Type:        "string",
-				Default:     "",
-				Required:    true,
-				Options:     []string{},
-			},
-			{
-				Name:        "desc",
-				Label:       "Description",
-				Description: "The description of the program",
-				Type:        "string",
-				Default:     "",
-				Required:    true,
-				Options:     []string{},
-			},
-			{
-				Name:        "cmd",
-				Label:       "Command",
-				Description: "The command to run the program",
-				Type:        "string",
-				Default:     "",
-				Required:    true,
-				Options:     []string{},
-			},
-			{
-				Name:        "args",
-				Label:       "Arguments",
-				Description: "The arguments to pass to the program",
-				Type:        "string",
-				Default:     "",
-				Required:    false,
-				Options:     []string{},
-			},
-			{
-				Name:        "cwd",
-				Label:       "Working Directory",
-				Description: "The working directory of the program",
-				Type:        "string",
-				Default:     "",
-				Required:    true,
-				Options:     []string{},
-			},
-			{
-				Name:        "user",
-				Label:       "User",
-				Description: "The user to run the program as",
-				Type:        "string",
-				Default:     "",
-				Required:    false,
-				Options:     []string{},
-			},
-			{
-				Name:        "group",
-				Label:       "Group",
-				Description: "The group to run the program as",
-				Type:        "string",
-				Default:     "",
-				Required:    false,
-				Options:     []string{},
-			},
-		},
-	}
-
-	return schema, nil
+	return models.ProgramSchema(), nil
 }
 
 // Start starts a program
@@ -189,10 +101,9 @@ func (p *Program) Start(id string) (*models.Program, error) {
 		return nil, err
 	}
 
-	// Update status to running
+	// Update status to started
 	program.Status = models.ProgramStarted
-	program.PID = 12345            // Mock PID
-	program.StartTime = 1234567890 // Mock start time
+
 
 	if err := p.db.Save(program).Error; err != nil {
 		return nil, fmt.Errorf("failed to start program: %w", err)

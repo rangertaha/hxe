@@ -26,3 +26,74 @@ func AutoMigrate(db *gorm.DB) {
 		&Program{},
 	)
 }
+
+func ProgramSchema() *Schema {
+
+	return &Schema{
+		Properties: []Property{
+			{
+				Name:        "name",
+				Label:       "Name",
+				Description: "The name of the program",
+				Type:        "string",
+				Default:     "",
+				Required:    true,
+				Options:     []string{},
+			},
+			{
+				Name:        "desc",
+				Label:       "Description",
+				Description: "The description of the program",
+				Type:        "string",
+				Default:     "",
+				Required:    true,
+				Options:     []string{},
+			},
+			{
+				Name:        "cmd",
+				Label:       "Command",
+				Description: "The command to run the program",
+				Type:        "string",
+				Default:     "",
+				Required:    true,
+				Options:     []string{},
+			},
+			{
+				Name:        "args",
+				Label:       "Arguments",
+				Description: "The arguments to pass to the program",
+				Type:        "string",
+				Default:     "",
+				Required:    false,
+				Options:     []string{},
+			},
+			{
+				Name:        "cwd",
+				Label:       "Working Directory",
+				Description: "The working directory of the program",
+				Type:        "string",
+				Default:     "",
+				Required:    true,
+				Options:     []string{},
+			},
+			{
+				Name:        "user",
+				Label:       "User",
+				Description: "The user to run the program as",
+				Type:        "string",
+				Default:     "",
+				Required:    false,
+				Options:     []string{},
+			},
+			{
+				Name:        "group",
+				Label:       "Group",
+				Description: "The group to run the program as",
+				Type:        "string",
+				Default:     "",
+				Required:    false,
+				Options:     []string{},
+			},
+		},
+	}
+}
