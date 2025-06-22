@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/rangertaha/hxe/plugins/services/proto";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+// Service defines the gRPC service for managing services.
+service Service {
+    rpc Init(InitRequest) returns (google.protobuf.Empty) {}
+    rpc Start(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc Restart(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc Enable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc Disable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc Stdin(StdinRequest) returns (google.protobuf.Empty) {}
+    rpc Stdout(google.protobuf.Empty) returns (StdoutResponse) {}
+}
+
+message InitRequest {
+    google.protobuf.Struct args = 1;
+}
+
+message StdinRequest {
+    bytes data = 1;
+}
+
+message StdoutResponse {
+    bytes data = 1;
+} 

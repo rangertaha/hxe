@@ -1,0 +1,13 @@
+build
+dist
+desktop/dist
+desktop/node_modules
+desktop/target
+desktop/src-tauri/target
+desktop/src-tauri/node_modules
+
+.DS_Store
+.idea
+.vscode
+.env
+.env.local
