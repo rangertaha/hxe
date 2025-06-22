@@ -6,6 +6,7 @@ import (
 
 	"github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats.go"
+	"github.com/rangertaha/hxe/internal"
 	"github.com/rangertaha/hxe/internal/log"
 	"github.com/rs/zerolog"
 )
@@ -38,7 +39,7 @@ func NewBroker(a *Agent) (*Broker, error) {
 
 	// Configure client options
 	clientOpts := []nats.Option{
-		nats.Name("ares-server"),
+		nats.Name(internal.NAME),
 		nats.InProcessServer(natsServer),
 		nats.FlusherTimeout(5 * time.Second),
 		// nats.PendingLimits(-1, -1), // Unlimited pending messages

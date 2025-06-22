@@ -1,42 +1,28 @@
 package models
 
 import (
-	"log"
-	"os"
-	"path/filepath"
-
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
-func init() {
-	// Get user's application directory
-	appDir, err := os.UserConfigDir()
-	if err != nil {
-		log.Fatal(err)
-	}
+type Schema struct {
+	Properties []Property `json:"properties"`
+}
 
-	// Create hxe directory if it doesn't exist
-	hxeDir := filepath.Join(appDir, "hxe")
-	if err := os.MkdirAll(hxeDir, 0755); err != nil {
-		log.Fatal(err)
-	}
+type Property struct {
+	Type        string   `json:"type"`
+	Name        string   `json:"name"`
+	Label       string   `json:"label"`
+	Description string   `json:"desc"`
+	Default     string   `json:"default"`
+	Required    bool     `json:"required"`
+	Options     []string `json:"options"`
+}
 
-	// Set database path in hxe directory
-	dbPath := filepath.Join(hxeDir, "hxe.db")
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Auto migrate the schema
+// AutoMigrate auto migrates the database
+func AutoMigrate(db *gorm.DB) {
 	db.AutoMigrate(
-		// Plugins
 		&Program{},
-
 	)
-	DB = db
-	SeedAll(DB)
 }

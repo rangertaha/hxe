@@ -2,16 +2,17 @@ package api
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/rangertaha/hxe/internal"
 	"github.com/rangertaha/hxe/internal/api/handlers"
 )
 
-func New() *echo.Echo {
+func New(b internal.Broker) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 
 	// Initialize CRUD handlers
 	api := e.Group("/api")
-	proc := handlers.NewProgram()
+	proc := handlers.NewProgram(b)
 	api.GET("/program", proc.List)
 	api.GET("/program/:id", proc.Get)
 	api.POST("/program", proc.Create)
@@ -33,4 +34,5 @@ func New() *echo.Echo {
 	api.POST("/program/:id/tail", proc.Tail)
 
 	return e
+
 }

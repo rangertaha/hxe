@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rangertaha/hxe/internal"
 	"github.com/rangertaha/hxe/internal/api/services"
 	"github.com/rangertaha/hxe/internal/models"
 )
@@ -12,9 +13,9 @@ type Program struct {
 	Svc *services.Program
 }
 
-func NewProgram() *Program {
+func NewProgram(b internal.Broker) *Program {
 	return &Program{
-		Svc: services.NewProgram(),
+		Svc: services.NewProgram(b),
 	}
 }
 

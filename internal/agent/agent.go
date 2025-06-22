@@ -9,11 +9,8 @@ import (
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/labstack/echo/v4"
 	"github.com/rangertaha/hxe/internal/config"
 	"github.com/rangertaha/hxe/internal/log"
-
-	"github.com/rs/zerolog"
 )
 
 // Agent is the main struct for the hxe backend
@@ -22,21 +19,15 @@ type Agent struct {
 	Broker     *Broker        // Message broker
 	Supervisor *Supervisor    // Process manager
 	API        *APIServer     // API server
-	log        zerolog.Logger
 	sig        chan os.Signal
 	conf       chan config.Config
 	done       chan struct{}
-}
-type APIServer struct {
-	log    zerolog.Logger
-	router *echo.Echo
 }
 
 // New creates a new Agent instance
 func New(cfg *config.Config) (agent *Agent, err error) {
 	agent = &Agent{
 		Config: cfg,
-		log:    log.With().Logger(),
 		sig:    make(chan os.Signal, 1),
 		done:   make(chan struct{}),
 		conf:   make(chan config.Config),
@@ -51,7 +42,7 @@ func New(cfg *config.Config) (agent *Agent, err error) {
 
 // Init initializes the agent
 func (a *Agent) Init() (err error) {
-	a.log.Info().Msg("initializing agent")
+	log.Info().Msg("initializing agent")
 
 	// Create messaging with server options
 	a.Broker, err = NewBroker(a)
@@ -76,7 +67,7 @@ func (a *Agent) Init() (err error) {
 
 // Stop the agent
 func (a *Agent) Stop() {
-	a.log.Info().Msg("stopping agent")
+	log.Info().Msg("stopping agent")
 
 	// Stop api server
 	a.API.Stop()
@@ -85,7 +76,7 @@ func (a *Agent) Stop() {
 	a.Broker.Stop()
 
 	// close(a.done)
-	a.log.Info().Msg("stopped agent")
+	log.Info().Msg("stopped agent")
 }
 
 // Start the agent
@@ -94,35 +85,35 @@ func (a *Agent) Start() error {
 	// Watch for program changes in goroutine
 	go func() {
 		if err := a.Watch(a.Config.ConfigFile, a.Config.LoadConfig); err != nil {
-			a.log.Error().Err(err).Msg("failed to watch config file")
+			log.Error().Err(err).Msg("failed to watch config file")
 		}
 	}()
 
 	// Watch for program changes in goroutine
 	go func() {
 		if err := a.Watch(a.Config.ProgDir, a.Config.LoadProgram); err != nil {
-			a.log.Error().Err(err).Msg("failed to watch programs directory")
+			log.Error().Err(err).Msg("failed to watch programs directory")
 		}
 	}()
 
 	// Start broker in goroutine
 	go func() {
 		if err := a.Broker.Start(); err != nil {
-			a.log.Error().Err(err).Msg("failed to start broker")
+			log.Error().Err(err).Msg("failed to start broker")
 		}
 	}()
 
 	// Start supervisor in goroutine
 	go func() {
 		if err := a.Supervisor.StartSupervisor(); err != nil {
-			a.log.Error().Err(err).Msg("failed to start supervisor")
+			log.Error().Err(err).Msg("failed to start supervisor")
 		}
 	}()
 
 	// Start api server in goroutine
 	go func() {
 		if err := a.API.Start(); err != nil {
-			a.log.Error().Err(err).Msg("failed to start api server")
+			log.Error().Err(err).Msg("failed to start api server")
 		}
 	}()
 
@@ -132,10 +123,10 @@ func (a *Agent) Start() error {
 	// Wait for shutdown signal
 	select {
 	case sig := <-a.sig:
-		a.log.Debug().Msgf("received system signal %v, initiating shutdown", sig)
+		log.Debug().Msgf("received system signal %v, initiating shutdown", sig)
 		a.Stop()
 	case <-a.done:
-		a.log.Debug().Msg("received done signal, initiating shutdown")
+		log.Debug().Msg("received done signal, initiating shutdown")
 		a.Stop()
 	}
 	return nil
@@ -220,7 +211,7 @@ func (a *Agent) Watch(path string, loader func(path string) error) error {
 				if !ok {
 					return
 				}
-				a.log.Info().Str("event", event.String()).Msg("event")
+				log.Info().Str("event", event.String()).Msg("event")
 				if event.Has(fsnotify.Write) {
 					loader(event.Name)
 				}
@@ -228,7 +219,7 @@ func (a *Agent) Watch(path string, loader func(path string) error) error {
 				if !ok {
 					return
 				}
-				a.log.Error().Err(err).Msg("error")
+				log.Error().Err(err).Msg("error")
 			}
 		}
 	}()

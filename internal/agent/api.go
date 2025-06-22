@@ -1,15 +1,28 @@
 package agent
 
 import (
+	"fmt"
+
+	"github.com/labstack/echo/v4"
 	"github.com/rangertaha/hxe/internal/api"
+	"github.com/rangertaha/hxe/internal/config"
 	"github.com/rangertaha/hxe/internal/log"
+	"github.com/rs/zerolog"
 )
+
+type APIServer struct {
+	config config.API
+	broker *Broker
+	log    zerolog.Logger
+	router *echo.Echo
+}
 
 // NewAPIServer creates a new API server
 func NewAPIServer(a *Agent) (*APIServer, error) {
 	svc := &APIServer{
+		config: a.Config.API,
 		log:    log.With().Logger(),
-		router: api.New(),
+		router: api.New(a.Broker),
 	}
 
 	if err := svc.Init(); err != nil {
@@ -31,7 +44,8 @@ func (a *APIServer) Start() error {
 
 	// Start server on port
 	go func() {
-		if err := a.router.Start(":8080"); err != nil {
+		a.log.Info().Str("host", a.config.Host).Int("port", a.config.Port).Msg("starting api")
+		if err := a.router.Start(fmt.Sprintf("%s:%d", a.config.Host, a.config.Port)); err != nil {
 			a.log.Fatal().Err(err).Msg("failed to start api")
 		}
 	}()

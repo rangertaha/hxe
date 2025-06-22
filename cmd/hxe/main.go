@@ -44,12 +44,11 @@ func main() {
 		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 			// Load configuration file
 			cfgFile := cmd.String("config")
-			defaultOpts := config.DefaultOptions()
 			cliOptions := config.CliOptions(ctx, cmd)
 			fileOptions := config.FileOption(cfgFile)
 
 			// Create new config
-			if cfgOption, err = config.New(defaultOpts, fileOptions, cliOptions); err != nil {
+			if cfgOption, err = config.New(fileOptions, cliOptions); err != nil {
 				return ctx, err
 			}
 

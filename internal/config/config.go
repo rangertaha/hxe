@@ -6,7 +6,6 @@ package config
 import (
 	"context"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -14,19 +13,24 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/rangertaha/hxe/internal"
+	"github.com/rangertaha/hxe/internal/log"
+	"github.com/rangertaha/hxe/internal/models"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	_ "embed"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v3"
 )
 
 const (
-	CONFIG_DIR     = "hxe"
-	CONFIG_FILE    = "config.hcl"
-	PROGRAM_FILE   = "example.hcl"
-	DefaultSubject = "hxe.cmd"
+	CONFIG_DIR      = "hxe"
+	CONFIG_FILE     = "config.hcl"
+	PROGRAM_FILE    = "example.hcl"
+	DATABASE_FILE   = "hxe.db"
+	DEFAULT_SUBJECT = "hxe"
 )
 
 var (
@@ -39,23 +43,18 @@ var (
 
 type (
 	Config struct {
-		ID      string        `hcl:"id,optional"`
-		Debug   bool          `hcl:"debug,optional"`
-		Level   zerolog.Level `hcl:"level,optional"`
-		Version string        `hcl:"version,optional"`
-		Banner  bool          `hcl:"banner,optional"`
-		ProgDir string        `hcl:"programs,optional"`
+		ID      string `hcl:"id,optional"`
+		Debug   bool   `hcl:"debug,optional"`
+		Version string `hcl:"version,optional"`
+		Banner  bool   `hcl:"banner,optional"`
+		ProgDir string `hcl:"programs,optional"`
 
-		Programs []Program
-		Broker   Broker `hcl:"broker,block"`
-		API      API    `hcl:"api,block"`
+		Programs []models.Program
+		Database Database `hcl:"database,block"`
+		Broker   Broker   `hcl:"broker,block"`
+		API      API      `hcl:"api,block"`
 
 		ConfigFile string
-	}
-	Program struct {
-		Name    string   `hcl:"name,optional"`
-		Command string   `hcl:"command,optional"`
-		Args    []string `hcl:"args,optional"`
 	}
 	API struct {
 		Host     string `hcl:"addr,optional"`
@@ -63,21 +62,30 @@ type (
 		Username string `hcl:"username,optional"`
 		Password string `hcl:"password,optional"`
 	}
+	Database struct {
+		Type     string `hcl:"type,optional"`
+		Host     string `hcl:"host,optional"`
+		Port     int    `hcl:"port,optional"`
+		Username string `hcl:"username,optional"`
+		Password string `hcl:"password,optional"`
+		Migrate  bool   `hcl:"migrate,optional"`
+	}
 )
 
 func init() {
-	// Outputs to nowhere
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	log.Logger = log.Output(io.Discard)
-
+	log.SetGlobalLevel(zerolog.ErrorLevel)
 }
 
 // New creates a new configuration
 func New(options ...func(*Config) error) (*Config, error) {
 	s := &Config{
-		Level:  zerolog.TraceLevel,
-		Banner: true,
-	} // Default values
+		Banner:  true,
+		Debug:   false,
+		Version: internal.VERSION,
+	}
+
+	// Default values
+	DefaultOptions()(s)
 
 	// Apply config options
 	for _, opt := range options {
@@ -88,8 +96,7 @@ func New(options ...func(*Config) error) (*Config, error) {
 	}
 
 	if s.Debug {
-		zerolog.SetGlobalLevel(zerolog.Level(s.Level))
-		log.Logger = log.Output(os.Stdout)
+		log.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
 	if s.Banner {
@@ -116,7 +123,7 @@ func (c *Config) LoadProgram(ppath string) (err error) {
 
 		if !d.IsDir() {
 			log.Info().Str("file", path).Msg("loading program")
-			var program Program
+			var program models.Program
 			if strings.HasSuffix(path, ".hcl") {
 				if err := hclsimple.DecodeFile(path, CtxFunctions, &program); err != nil {
 					log.Warn().Err(err).Str("file", path).Msg("failed to parse program file")
@@ -139,11 +146,42 @@ func (c *Config) LoadProgram(ppath string) (err error) {
 	return
 }
 
+func (c *Config) LoadDatabase(db Database) (err error) {
+	log.Info().Msg("loading programs from directory")
+
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		return fmt.Errorf("error getting user config directory: %w", err)
+	}
+
+	// Use SQLite database
+	if db.Type == "sqlite" {
+		dbFile := filepath.Join(userConfigDir, CONFIG_DIR, DATABASE_FILE)
+		log.Info().Str("file", dbFile).Msg("using existing SQLite database")
+		models.DB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+		if err != nil {
+			return err
+		}
+	}
+	// Use in-memory SQLite database
+
+	// Auto migrate the schema
+	if db.Migrate {
+		models.AutoMigrate(models.DB)
+		// SeedPrograms(models.DB)
+	}
+
+	if c.Debug {
+		models.DB.Logger = models.DB.Logger.LogMode(logger.Info)
+	}
+
+	return
+}
+
 func CliOptions(ctx context.Context, cmd *cli.Command) func(c *Config) error {
 
 	return func(c *Config) error {
 		c.Debug = cmd.Bool("debug")
-		c.Level = zerolog.Level(cmd.Int("level"))
 		return nil
 	}
 }
@@ -191,6 +229,10 @@ func DefaultOptions() func(*Config) error {
 
 		if err := c.LoadProgram(c.ProgDir); err != nil {
 			return fmt.Errorf("error parsing program file: %w", err)
+		}
+
+		if err := c.LoadDatabase(c.Database); err != nil {
+			return fmt.Errorf("error parsing database file: %w", err)
 		}
 
 		return nil

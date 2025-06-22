@@ -1,6 +1,7 @@
-package models
+package config
 
 import (
+	"github.com/rangertaha/hxe/internal/models"
 	"gorm.io/gorm"
 )
 
@@ -24,18 +25,18 @@ func SeedPrograms(db *gorm.DB) error {
 		{"Backup Verification", "sha256sum /backups/backup_%d.tar", "Verify backup integrity"},
 	}
 
-	var programs []Program
+	var programs []models.Program
 
 	// Generate 100 programs based on the base programs
 	for i := 0; i < 100; i++ {
 		baseProgram := basePrograms[i%len(basePrograms)]
 
-		program := Program{
+		program := models.Program{
 			Name:        baseProgram.NamePrefix + " " + string('A'+rune(i%26)),
 			Description: baseProgram.Description,
 			Command:     baseProgram.Exec,
 			Args:        "",
-			WorkingDir:  "/tmp",
+			Directory:   "/tmp",
 			User:        "nobody",
 			Group:       "nobody",
 			Status:      "stopped",
@@ -48,12 +49,12 @@ func SeedPrograms(db *gorm.DB) error {
 	}
 
 	// Add the original program
-	programs = append(programs, Program{
+	programs = append(programs, models.Program{
 		Name:        "Database Backup Original",
 		Description: "Daily backup of production database",
 		Command:     "pg_dump",
 		Args:        "-U postgres mydb > /backups/db_$(date +%Y%m%d).sql",
-		WorkingDir:  "/tmp",
+					Directory:   "/tmp",
 		User:        "nobody",
 		Group:       "nobody",
 		Status:      "stopped",
@@ -65,7 +66,7 @@ func SeedPrograms(db *gorm.DB) error {
 
 	// Create programs only if they don't exist
 	for _, program := range programs {
-		var existingProgram Program
+		var existingProgram models.Program
 		result := db.Where("name = ?", program.Name).First(&existingProgram)
 		if result.Error != nil {
 			if result.Error == gorm.ErrRecordNotFound {
@@ -82,11 +83,3 @@ func SeedPrograms(db *gorm.DB) error {
 	return nil
 }
 
-// SeedAll runs all seed functions in the correct order
-func SeedAll(db *gorm.DB) error {
-	if err := SeedPrograms(db); err != nil {
-		return err
-	}
-
-	return nil
-}
