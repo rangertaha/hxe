@@ -1,3 +1,20 @@
+/*
+Copyright © 2025 Rangertaha <rangertaha@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package main
 
 import (
@@ -127,8 +144,8 @@ func main() {
 			},
 			{
 				Name:        "list",
-				Usage:       "List all services",
-				Description: `List all configured services with their current status.`,
+				Usage:       "List all programs",
+				Description: `List all programs with their current status.`,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					hxeClient := client.NewClient(clientURL, username, password)
 					if hxeClient, err = hxeClient.Login(); err != nil {
@@ -146,8 +163,8 @@ func main() {
 			},
 			{
 				Name:        "start",
-				Usage:       "Start a service",
-				Description: `Start a service by name.`,
+				Usage:       "Start a program",
+				Description: `Start a program by name.`,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					hxeClient := client.NewClient(clientURL, username, password)
 					if hxeClient, err = hxeClient.Login(); err != nil {
@@ -164,8 +181,8 @@ func main() {
 			},
 			{
 				Name:        "stop",
-				Usage:       "Stop a service",
-				Description: `Stop a service by name.`,
+				Usage:       "Stop a program",
+				Description: `Stop a program by name.`,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					hxeClient := client.NewClient(clientURL, username, password)
 					if hxeClient, err = hxeClient.Login(); err != nil {
@@ -182,8 +199,8 @@ func main() {
 			},
 			{
 				Name:        "restart",
-				Usage:       "Restart a service",
-				Description: `Restart a service by name.`,
+				Usage:       "Restart a program",
+				Description: `Restart a program by name.`,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					hxeClient := client.NewClient(clientURL, username, password)
 					if hxeClient, err = hxeClient.Login(); err != nil {
@@ -200,8 +217,8 @@ func main() {
 			},
 			{
 				Name:        "status",
-				Usage:       "Show service status",
-				Description: `Show the status of a specific service or all services.`,
+				Usage:       "Show program status",
+				Description: `Show the status of a specific program or all programs.`,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					hxeClient := client.NewClient(clientURL, username, password)
 					if hxeClient, err = hxeClient.Login(); err != nil {
@@ -212,6 +229,83 @@ func main() {
 					if err != nil {
 						return fmt.Errorf("failed to run command: %w", err)
 					}
+					hxeClient.Program.Print(progs)
+					return nil
+				},
+			},
+			{
+				Name:        "reload",
+				Usage:       "Reload configuration",
+				Description: `Reload the configuration without restarting services.`,
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					hxeClient := client.NewClient(clientURL, username, password)
+					if hxeClient, err = hxeClient.Login(); err != nil {
+						return err
+					}
+
+					prog, err := hxeClient.Program.Reload(cmd.Args().First())
+					if err != nil {
+						return fmt.Errorf("failed to run command: %w", err)
+					}
+
+					hxeClient.Program.PrintDetail(prog)
+					return nil
+				},
+			},
+			{
+				Name:        "enable",
+				Usage:       "Enable a program",
+				Description: `Enable a program to start automatically.`,
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					hxeClient := client.NewClient(clientURL, username, password)
+					if hxeClient, err = hxeClient.Login(); err != nil {
+						return err
+					}
+
+					prog, err := hxeClient.Program.Enable(cmd.Args().First())
+					if err != nil {
+						return fmt.Errorf("failed to run command: %w", err)
+					}
+
+					hxeClient.Program.PrintDetail(prog)
+
+					return nil
+				},
+			},
+			{
+				Name:        "disable",
+				Usage:       "Disable a program",
+				Description: `Disable a program from starting automatically.`,
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					hxeClient := client.NewClient(clientURL, username, password)
+					if hxeClient, err = hxeClient.Login(); err != nil {
+						return err
+					}
+
+					prog, err := hxeClient.Program.Disable(cmd.Args().First())
+					if err != nil {
+						return fmt.Errorf("failed to run command: %w", err)
+					}
+
+					hxeClient.Program.PrintDetail(prog)
+					return nil
+				},
+			},
+			{
+				Name:        "delete",
+				Usage:       "Delete registered program by ID",
+				Description: `Delete a registered program by ID.`,
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					hxeClient := client.NewClient(clientURL, username, password)
+					if hxeClient, err = hxeClient.Login(); err != nil {
+						return err
+					}
+
+					progs, err := hxeClient.Program.MultiDelete(cmd.Args().Slice()...)
+					if err != nil {
+						return fmt.Errorf("failed to run command: %w", err)
+					}
+
 					hxeClient.Program.Print(progs)
 					return nil
 				},
@@ -241,64 +335,6 @@ func main() {
 					}
 
 					prog, err := hxeClient.Program.Tail(cmd.Args().First())
-					if err != nil {
-						return fmt.Errorf("failed to run command: %w", err)
-					}
-
-					hxeClient.Program.PrintDetail(prog)
-					return nil
-				},
-			},
-			{
-				Name:        "reload",
-				Usage:       "Reload configuration",
-				Description: `Reload the configuration without restarting services.`,
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					hxeClient := client.NewClient(clientURL, username, password)
-					if hxeClient, err = hxeClient.Login(); err != nil {
-						return err
-					}
-
-					prog, err := hxeClient.Program.Reload(cmd.Args().First())
-					if err != nil {
-						return fmt.Errorf("failed to run command: %w", err)
-					}
-
-					hxeClient.Program.PrintDetail(prog)
-					return nil
-				},
-			},
-			{
-				Name:        "enable",
-				Usage:       "Enable a service",
-				Description: `Enable a service to start automatically.`,
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					hxeClient := client.NewClient(clientURL, username, password)
-					if hxeClient, err = hxeClient.Login(); err != nil {
-						return err
-					}
-
-					prog, err := hxeClient.Program.Enable(cmd.Args().First())
-					if err != nil {
-						return fmt.Errorf("failed to run command: %w", err)
-					}
-
-					hxeClient.Program.PrintDetail(prog)
-
-					return nil
-				},
-			},
-			{
-				Name:        "disable",
-				Usage:       "Disable a service",
-				Description: `Disable a service from starting automatically.`,
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					hxeClient := client.NewClient(clientURL, username, password)
-					if hxeClient, err = hxeClient.Login(); err != nil {
-						return err
-					}
-
-					prog, err := hxeClient.Program.Disable(cmd.Args().First())
 					if err != nil {
 						return fmt.Errorf("failed to run command: %w", err)
 					}

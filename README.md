@@ -1,26 +1,26 @@
-# Hxe
+# HXE
 
 HXE - Host eXecution Engine
 
-Hxe is a host based process execution engine with command line, desktop, and web user interfaces. 
-
-
+A powerful host-based process execution engine with JWT authentication, comprehensive API, and beautiful client interfaces.
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-
 ## Features
 
-- 🚀 **Service Management**: Start, stop, restart, and monitor services
-- 🖥️ **Desktop Interface**: Modern web-based UI for service management
-- 💻 **Command Line Interface**: Full-featured CLI for automation
+- 🔐 **JWT Authentication**: Secure authentication with token-based access
+- 🚀 **Program Management**: Start, stop, restart, and monitor programs
+- 🖥️ **Desktop Interface**: Modern web-based UI for program management
+- 💻 **Command Line Interface**: Full-featured CLI with beautiful table formatting
 - 🔧 **Configuration**: HCL-based configuration files
-- 📊 **Monitoring**: Real-time service status and logs
-- 🔄 **Auto-restart**: Automatic service recovery on failure
-- 🌐 **Web API**: RESTful API for integration
+- 📊 **Monitoring**: Real-time program status and logs
+- 🔄 **Auto-restart**: Automatic program recovery on failure
+- 🌐 **RESTful API**: Comprehensive API with JWT protection
 - 📝 **Logging**: Comprehensive logging with multiple levels
-- 🔐 **Authentication**: Built-in security features
+- 🎨 **Beautiful UI**: Table formatting with go-pretty library
+- 🔄 **Multi-operations**: Bulk operations for multiple programs
+- 🌍 **Cross-platform**: Works on Linux, Windows, and macOS
 
 ## Screenshots
 
@@ -66,74 +66,191 @@ make clean
 
 ## Quick Start
 
-### 1. Initialize Configuration
-
-Hxe will automatically create a default configuration file on first run:
+### 1. Start the Server
 
 ```bash
-hxe --help
-```
-
-This creates a default configuration at `~/.config/hxe/config.hcl`.
-
-### 2. Start a Service
-
-```bash
-# Run a simple command
-hxe echo "Hello, World!"
-
-# Run in daemon mode
+# Start the HXE server
 hxe --daemon
 
-# Execute with custom config
-hxe --config /path/to/config.hcl ls -la
+# Or with custom configuration
+hxe --config /path/to/config.hcl --daemon
 ```
 
-### 3. Desktop Interface
+### 2. Using the Go Client
 
-Start the desktop interface to manage services through a web browser:
+```go
+package main
+
+import (
+    "log"
+    "github.com/rangertaha/hxe/pkg/client"
+)
+
+func main() {
+    // Create authenticated client
+    hxeClient := client.NewClient("http://localhost:8080", "admin", "password")
+    
+    // Login to get JWT token
+    _, err := hxeClient.Login()
+    if err != nil {
+        log.Fatal("Login failed:", err)
+    }
+    
+    programClient := hxeClient.Program
+    
+    // List all programs
+    programs, err := programClient.List()
+    if err != nil {
+        log.Fatal("Failed to list programs:", err)
+    }
+    
+    // Display programs in beautiful table format
+    programClient.Print(programs)
+    
+    // Create a new program
+    newProgram := &models.Program{
+        Name:        "My Program",
+        Description: "A test program",
+        Command:     "/usr/bin/python3",
+        Args:        "script.py",
+        Directory:   "/tmp",
+        User:        "nobody",
+        Group:       "nobody",
+        Enabled:     true,
+    }
+    
+    created, err := programClient.Create(newProgram)
+    if err != nil {
+        log.Fatal("Failed to create program:", err)
+    }
+    
+    // Start the program
+    _, err = programClient.Start(created.ID)
+    if err != nil {
+        log.Fatal("Failed to start program:", err)
+    }
+    
+    // Logout when done
+    hxeClient.Logout()
+}
+```
+
+### 3. Command Line Interface
 
 ```bash
-hxe --daemon
-```
+# List programs
+hxe list
 
-Then open your browser to `http://localhost:8080`.
+# Start a program
+hxe start my-program
+
+# Stop a program
+hxe stop my-program
+
+# Get program status
+hxe status my-program
+
+# Run a command directly
+hxe run "python3 script.py"
+```
 
 ## Configuration
 
-Hxe uses HCL (HashiCorp Configuration Language) for configuration files. The default configuration is created at `~/.config/hxe/config.hcl`.
+HXE uses HCL (HashiCorp Configuration Language) for configuration files. The default configuration is created at `~/.config/hxe/config.hcl`.
 
 ### Basic Configuration
 
 ```hcl
-// hxe Configuration
+// HXE Configuration
 debug = false
-version = "0.0.0"
+version = "0.1.0"
 
 api {
   addr = "0.0.0.0"
   port = 8080
-  username = "hxe"
-  password = "hxe"
+  username = "admin"
+  password = "password"
+}
+
+database {
+  type = "sqlite"
+  migrate = true
 }
 
 broker { 
   name = "hxe"
   addr = "0.0.0.0"
-  port = 8080
+  port = 4222
 }
 ```
 
-### Service Configuration
+## API Reference
 
-Create service configuration files (e.g., `service.hcl`):
+### Authentication
 
-```hcl
-// Service Configuration
-service "my-service" {
-  command = "python"
-  args = ["app.py"]
-}
+HXE uses JWT authentication. Default credentials:
+- **Username**: `admin`
+- **Password**: `password`
+
+### REST Endpoints
+
+#### Authentication
+- `POST /api/auth/login` - Login and get JWT token
+- `POST /api/auth/refresh` - Refresh JWT token
+- `POST /api/auth/logout` - Logout
+
+#### Programs
+- `GET /api/program` - List all programs
+- `GET /api/program/{id}` - Get program details
+- `POST /api/program` - Create a new program
+- `PUT /api/program/{id}` - Update a program
+- `DELETE /api/program/{id}` - Delete a program
+- `POST /api/program/{id}/start` - Start a program
+- `POST /api/program/{id}/stop` - Stop a program
+- `POST /api/program/{id}/restart` - Restart a program
+- `POST /api/program/{id}/enable` - Enable a program
+- `POST /api/program/{id}/disable` - Disable a program
+- `POST /api/program/{id}/reload` - Reload program configuration
+- `POST /api/program/{id}/shell` - Open shell for a program
+- `POST /api/program/{id}/tail` - Follow program logs
+
+### Client Library
+
+The HXE client library provides a comprehensive Go API:
+
+```go
+// Create client
+client := client.NewClient("http://localhost:8080", "admin", "password")
+
+// Login
+_, err := client.Login()
+
+// Get program client
+programClient := client.Program
+
+// CRUD operations
+programs, _ := programClient.List()
+program, _ := programClient.Get("123")
+created, _ := programClient.Create(newProgram)
+updated, _ := programClient.Update("123", program)
+deleted, _ := programClient.Delete("123")
+
+// Runtime operations
+_, _ = programClient.Start("123")
+_, _ = programClient.Stop("123")
+_, _ = programClient.Restart("123")
+_, _ = programClient.Enable("123")
+_, _ = programClient.Disable("123")
+
+// Multi-operations
+_, _ = programClient.MultiStart("123", "456", "789")
+_, _ = programClient.MultiStop("123", "456", "789")
+_, _ = programClient.MultiDelete("123", "456", "789")
+
+// Display methods
+programClient.Print(programs)        // Smart display
+programClient.PrintDetail(program)   // Detailed view
+programClient.PrintList(programs)    // Table view
 ```
 
 ## Usage
@@ -151,22 +268,23 @@ Options:
   -v, --version   Show version
 
 Commands:
-  run             Run a command or service
-  list            List all services
-  start           Start a service
-  stop            Stop a service
-  restart         Restart a service
-  status          Show service status
-  tail            Tail service logs
+  run             Run a command or program
+  list            List all programs
+  start           Start a program
+  stop            Stop a program
+  restart         Restart a program
+  status          Show program status
+  tail            Tail program logs
   reload          Reload configuration
-  enable          Enable a service
-  disable         Disable a service
-  shell           Open shell for a service
+  enable          Enable a program
+  disable         Disable a program
+  shell           Open shell for a program
 ```
 
-### Subcommands
+### Examples
 
-#### `run` - Execute Commands
+#### Basic Program Execution
+
 ```bash
 # Run a simple command
 hxe run echo "Hello, World!"
@@ -178,160 +296,37 @@ hxe run python script.py
 hxe run node server.js --port 3000
 ```
 
-#### `list` - List Services
+#### Program Management
+
 ```bash
-# List all configured services
+# List all programs
 hxe list
 
-# Alternative aliases
-hxe ls
-hxe l
-```
+# Start a program
+hxe start my-program
 
-#### `start` - Start Services
-```bash
-# Start a specific service
-hxe start my-service
+# Stop a program
+hxe stop my-program
 
-# Alternative alias
-hxe s my-service
-```
+# Get program status
+hxe status my-program
 
-#### `stop` - Stop Services
-```bash
-# Stop a specific service
-hxe stop my-service
+# Enable autostart
+hxe enable my-program
 
-# Alternative alias
-hxe st my-service
-```
-
-#### `restart` - Restart Services
-```bash
-# Restart a specific service
-hxe restart my-service
-
-# Alternative alias
-hxe rs my-service
-```
-
-#### `status` - Service Status
-```bash
-# Show status of all services
-hxe status
-
-# Show status of a specific service
-hxe status my-service
-
-# Alternative alias
-hxe st my-service
-```
-
-#### `tail` - Follow Logs
-```bash
-# Tail logs with default settings (50 lines, follow enabled)
-hxe tail my-service
-
-# Tail with custom number of lines
-hxe tail --lines 100 my-service
-
-# Tail without following (show last N lines only)
-hxe tail --follow=false my-service
-
-# Alternative aliases
-hxe t my-service
-hxe tail -n 100 my-service
-```
-
-#### `reload` - Reload Configuration
-```bash
-# Reload configuration without restarting services
-hxe reload
-
-# Alternative alias
-hxe rl
-```
-
-#### `enable` - Enable Services
-```bash
-# Enable a service to start automatically
-hxe enable my-service
-
-# Alternative alias
-hxe e my-service
-```
-
-#### `disable` - Disable Services
-```bash
-# Disable a service from starting automatically
-hxe disable my-service
-
-# Alternative alias
-hxe d my-service
-```
-
-#### `shell` - Interactive Shell
-```bash
-# Open an interactive shell for a service
-hxe shell my-service
-
-# Alternative alias
-hxe sh my-service
-```
-
-### Examples
-
-#### Basic Service Execution
-
-```bash
-# Run a simple command
-hxe ls -la
-
-# Run a Python script
-hxe python script.py
-
-# Run with arguments
-hxe node server.js --port 3000
+# Disable autostart
+hxe disable my-program
 ```
 
 #### Daemon Mode
 
 ```bash
-# Start hxe in daemon mode
+# Start HXE in daemon mode
 hxe --daemon
 
 # Start with custom configuration
 hxe --config /etc/hxe/config.hcl --daemon
 ```
-
-#### Debug Mode
-
-```bash
-# Enable debug logging
-hxe --debug ls -la
-
-# Debug with daemon mode
-hxe --debug --daemon
-```
-
-## API Reference
-
-### REST Endpoints
-
-When running in daemon mode, Hxe exposes a REST API:
-
-- `GET /api/services` - List all services
-- `GET /api/services/{id}` - Get service details
-- `POST /api/services` - Create a new service
-- `PUT /api/services/{id}` - Update a service
-- `DELETE /api/services/{id}` - Delete a service
-- `POST /api/services/{id}/start` - Start a service
-- `POST /api/services/{id}/stop` - Stop a service
-- `POST /api/services/{id}/restart` - Restart a service
-
-### Authentication
-
-The API supports basic authentication with the credentials specified in your configuration file.
 
 ## Development
 
@@ -339,15 +334,17 @@ The API supports basic authentication with the credentials specified in your con
 
 ```
 hxe/
-├── cmd/hxe/          # Main application entry point
-├── internal/         # Internal packages
-│   ├── agent/        # Service agent
-│   ├── config/       # Configuration management
-│   └── log/          # Logging utilities
-├── pkg/              # Public packages
-├── desktop/          # Desktop application
-├── examples/         # Example configurations
-└── docs/             # Documentation
+├── cmd/hxe/              # Main application entry point
+├── internal/             # Internal packages
+│   ├── agent/            # Service agent
+│   ├── api/              # API server and handlers
+│   ├── config/           # Configuration management
+│   ├── models/           # Data models
+│   └── log/              # Logging utilities
+├── pkg/client/           # Go client library
+├── desktop/              # Desktop application
+├── examples/             # Example configurations and usage
+└── docs/                 # Documentation
 ```
 
 ### Building
@@ -372,7 +369,7 @@ go test ./...
 go test -cover ./...
 
 # Run specific test
-go test ./internal/agent
+go test ./internal/api
 ```
 
 ## Contributing
@@ -390,7 +387,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Inspired by [Supervisord](http://supervisord.org/), [PM2](https://pm2.keymetrics.io/), and [Systemd](https://systemd.io/)
-- Built with [Go](https://golang.org/), [NATS](https://nats.io/), and [React](https://reactjs.org/)
+- Built with [Go](https://golang.org/), [Echo](https://echo.labstack.com/), [GORM](https://gorm.io/), and [React](https://reactjs.org/)
 
 ## Support
 

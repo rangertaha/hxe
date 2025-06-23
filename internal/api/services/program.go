@@ -1,3 +1,20 @@
+/*
+Copyright © 2025 Rangertaha <rangertaha@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package services
 
 import (
@@ -65,11 +82,17 @@ func (p *Program) Update(id string, updates models.Program) (*models.Program, er
 }
 
 // Delete deletes a program
-func (p *Program) Delete(id string) error {
-	if err := p.db.Delete(&models.Program{}, id).Error; err != nil {
-		return fmt.Errorf("failed to delete program: %w", err)
+func (p *Program) Delete(id string) (*models.Program, error) {
+	deleted, err := p.Stop(id)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	if err := p.db.Delete(&deleted, id).Error; err != nil {
+		return nil, fmt.Errorf("failed to delete program: %w", err)
+	}
+
+	return deleted, nil
 }
 
 // Schema returns the schema of a program
@@ -129,9 +152,6 @@ func (p *Program) Status(id string) (*models.Program, error) {
 		return nil, err
 	}
 
-	// In a real implementation, you might check the actual process status
-	// For now, we just return the stored status
-	_ = program // Use the variable to avoid warning
 	return program, nil
 }
 
