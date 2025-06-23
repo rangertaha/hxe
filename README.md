@@ -1,8 +1,8 @@
-# HXE
+# hxe
 
 HXE - Host eXecution Engine
 
-A powerful host-based process execution engine with JWT authentication, comprehensive API, and beautiful client interfaces.
+A host-based process execution and management. 
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-GPLv3+-green.svg)](LICENSE)
