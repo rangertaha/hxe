@@ -1,6 +1,6 @@
 /*
  * HXE - Host-based Process Execution Engine
- * Copyright (C) 2025 rangertaha@gmail.com
+ * Copyright (C) 2025 Rangertaha <rangertaha@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
