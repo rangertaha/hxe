@@ -110,50 +110,42 @@ func (h *Program) Status(c echo.Context) error {
 }
 
 func (h *Program) Reload(c echo.Context) error {
-	err := h.Prog.Reload(c.Param("id"))
+	program, err := h.Prog.Reload(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "Program reloaded"})
+	return c.JSON(http.StatusOK, program)
 }
 
 func (h *Program) Enable(c echo.Context) error {
-	err := h.Prog.Enable(c.Param("id"))
+	program, err := h.Prog.Enable(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "Program enabled"})
+	return c.JSON(http.StatusOK, program)
 }
 
 func (h *Program) Disable(c echo.Context) error {
-	err := h.Prog.Disable(c.Param("id"))
+	program, err := h.Prog.Disable(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "Program disabled"})
+	return c.JSON(http.StatusOK, program)
 }
 
 // STREAM HANDLERS
 func (h *Program) Shell(c echo.Context) error {
-	err := h.Prog.Shell(c.Param("id"))
+	program, err := h.Prog.Shell(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "Shell started"})
+	return c.JSON(http.StatusOK, program)
 }
 
 func (h *Program) Tail(c echo.Context) error {
-	err := h.Prog.Tail(c.Param("id"))
+	program, err := h.Prog.Tail(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "Tail started"})
-}
-
-func (h *Program) Run(c echo.Context) error {
-	err := h.Prog.Run(c.Param("id"))
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "Program run started"})
+	return c.JSON(http.StatusOK, program)
 }

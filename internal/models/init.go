@@ -6,7 +6,21 @@ import (
 
 var DB *gorm.DB
 
+type Base struct {
+	ID      uint           `gorm:"primaryKey" json:"id"`
+	Created int64          `gorm:"autoCreateTime" json:"created"`
+	Updated int64          `gorm:"autoUpdateTime" json:"updated"`
+	Deleted gorm.DeletedAt `gorm:"index" json:"deleted"`
+}
+
+type App struct {
+	Base
+	ID       string    `gorm:"primaryKey" json:"id"`
+	Programs []Program `json:"programs" gorm:"foreignKey:AID"`
+}
+
 type Schema struct {
+	Name       string     `json:"name"`
 	Properties []Property `json:"properties"`
 }
 
@@ -23,6 +37,7 @@ type Property struct {
 // AutoMigrate auto migrates the database
 func AutoMigrate(db *gorm.DB) {
 	db.AutoMigrate(
+		&App{},
 		&Program{},
 	)
 }

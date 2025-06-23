@@ -1,12 +1,12 @@
-package builtins
+package executors
 
 import (
 	"fmt"
 
-	"github.com/rangertaha/hxe/internal/interfaces"
+	"github.com/rangertaha/hxe/internal"
 )
 
-type Creator func() interfaces.Plugin
+type Creator func() internal.Executor
 
 var Plugins = map[string]Creator{}
 

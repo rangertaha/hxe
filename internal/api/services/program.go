@@ -53,23 +53,11 @@ func (p *Program) Create(program models.Program) (*models.Program, error) {
 	if err := p.db.Create(&program).Error; err != nil {
 		return nil, fmt.Errorf("failed to create program: %w", err)
 	}
-
-	// Publish program created event
-	if err := p.broker.Publish(internal.PROGRAM_CREATED_TOPIC, []byte(program.ID)); err != nil {
-		return nil, fmt.Errorf("failed to publish program created event: %w", err)
-	}
-
 	return &program, nil
 }
 
 // Update updates a program
 func (p *Program) Update(id string, updates models.Program) (*models.Program, error) {
-	programID, err := strconv.ParseUint(id, 10, 32)
-	if err != nil {
-		return nil, fmt.Errorf("invalid program ID: %w", err)
-	}
-
-	updates.ID = uint(programID)
 	if err := p.db.Save(&updates).Error; err != nil {
 		return nil, fmt.Errorf("failed to update program: %w", err)
 	}
@@ -78,12 +66,7 @@ func (p *Program) Update(id string, updates models.Program) (*models.Program, er
 
 // Delete deletes a program
 func (p *Program) Delete(id string) error {
-	programID, err := strconv.ParseUint(id, 10, 32)
-	if err != nil {
-		return fmt.Errorf("invalid program ID: %w", err)
-	}
-
-	if err := p.db.Delete(&models.Program{}, programID).Error; err != nil {
+	if err := p.db.Delete(&models.Program{}, id).Error; err != nil {
 		return fmt.Errorf("failed to delete program: %w", err)
 	}
 	return nil
@@ -102,8 +85,7 @@ func (p *Program) Start(id string) (*models.Program, error) {
 	}
 
 	// Update status to started
-	program.Status = models.ProgramStarted
-
+	program.Status = models.ProgramStart
 
 	if err := p.db.Save(program).Error; err != nil {
 		return nil, fmt.Errorf("failed to start program: %w", err)
@@ -120,10 +102,7 @@ func (p *Program) Stop(id string) (*models.Program, error) {
 	}
 
 	// Update status to stopped
-	program.Status = "stopped"
-	program.PID = 0
-	program.EndTime = 1234567890 // Mock end time
-	program.ExitCode = 0
+	program.Status = models.ProgramStop
 
 	if err := p.db.Save(program).Error; err != nil {
 		return nil, fmt.Errorf("failed to stop program: %w", err)
@@ -157,77 +136,71 @@ func (p *Program) Status(id string) (*models.Program, error) {
 }
 
 // Reload reloads the configuration for a program
-func (p *Program) Reload(id string) error {
+func (p *Program) Reload(id string) (*models.Program, error) {
 	program, err := p.Get(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// In a real implementation, you would reload the program's configuration
-	// For now, we just log that reload was requested
-	_ = program // Use the variable to avoid warning
-	return nil
+	program.Status = models.ProgramReload
+
+	if err := p.db.Save(program).Error; err != nil {
+		return nil, fmt.Errorf("failed to reload program: %w", err)
+	}
+	return program, nil
 }
 
 // Enable enables a program to start automatically
-func (p *Program) Enable(id string) error {
+func (p *Program) Enable(id string) (*models.Program, error) {
 	program, err := p.Get(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	program.Enabled = true
 	if err := p.db.Save(program).Error; err != nil {
-		return fmt.Errorf("failed to enable program: %w", err)
+		return nil, fmt.Errorf("failed to enable program: %w", err)
 	}
 
-	return nil
+	return program, nil
 }
 
 // Disable disables a program from starting automatically
-func (p *Program) Disable(id string) error {
+func (p *Program) Disable(id string) (*models.Program, error) {
 	program, err := p.Get(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	program.Enabled = false
+	program.Status = models.ProgramStop
 	if err := p.db.Save(program).Error; err != nil {
-		return fmt.Errorf("failed to disable program: %w", err)
+		return nil, fmt.Errorf("failed to disable program: %w", err)
 	}
 
-	return nil
+	return program, nil
 }
 
 // Tail follows the logs of a program
-func (p *Program) Tail(id string) error {
+func (p *Program) Tail(id string) (*models.Program, error) {
 	program, err := p.Get(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// In a real implementation, you would start tailing the program's log file
 	// For now, we just return success
-	_ = program // Use the variable to avoid warning
-	return nil
+	return program, nil
 }
 
 // Shell opens an interactive shell for a program
-func (p *Program) Shell(id string) error {
+func (p *Program) Shell(id string) (*models.Program, error) {
 	program, err := p.Get(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// In a real implementation, you would open an interactive shell
 	// For now, we just return success
-	_ = program // Use the variable to avoid warning
-	return nil
-}
-
-// Run executes a command
-func (p *Program) Run(cmd string) error {
-	// In a real implementation, you would execute the command
-	// For now, we just return success
-	return nil
+	return program, nil
 }

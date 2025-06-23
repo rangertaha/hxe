@@ -61,6 +61,16 @@ type (
 		Port     int    `hcl:"port,optional"`
 		Username string `hcl:"username,optional"`
 		Password string `hcl:"password,optional"`
+		Token    string `hcl:"token,optional"`
+		Client   Client `hcl:"client,block"`
+	}
+	Client struct {
+		Host     string `hcl:"addr,optional"`
+		Port     int    `hcl:"port,optional"`
+		URL      string `hcl:"url,optional"`
+		Token    string `hcl:"token,optional"`
+		Username string `hcl:"username,optional"`
+		Password string `hcl:"password,optional"`
 	}
 	Database struct {
 		Type     string `hcl:"type,optional"`
@@ -168,7 +178,7 @@ func (c *Config) LoadDatabase(db Database) (err error) {
 	// Auto migrate the schema
 	if db.Migrate {
 		models.AutoMigrate(models.DB)
-		// SeedPrograms(models.DB)
+		SeedPrograms(models.DB)
 	}
 
 	if c.Debug {

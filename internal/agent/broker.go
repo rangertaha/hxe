@@ -58,6 +58,12 @@ func NewBroker(a *Agent) (*Broker, error) {
 	}, nil
 }
 
+func (b *Broker) Init() error {
+	b.log.Info().Msg("initializing messaging broker")
+
+	return nil
+}
+
 // Start starts listening for messages
 func (b *Broker) Start() error {
 	b.log.Info().Msg("starting messaging broker")

@@ -1,10 +1,10 @@
-name: Ares
+name: Hxe
 
 on:
   push:
     branches: [ main ]
   schedule:
-    - cron: "0 0 * * 1-5"
+    - cron: "0 0 1 * *"
   workflow_dispatch:
 
 permissions:
@@ -15,17 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Check out repository under $GITHUB_WORKSPACE, so the job can access it
     - uses: actions/checkout@v3
 
-    # Commit all changed files to the repository
-    - name: Commit to the repo
-      run: |
-        if [ $((1 + $RANDOM % 10)) -gt 7 ]; then  
-          git config --global user.name "rangertaha/github-stats"
-          git config --global user.email "rangertaha@gmail.com"
-          git add .
-          # Force the build to succeed, even if no files were changed
-          git commit -m 'Update generated files' || true
-          git push
-        fi
+    - name: Build app
+      run: echo "Build app"

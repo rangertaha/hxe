@@ -1,43 +1,56 @@
 package models
 
-import (
-	"github.com/rangertaha/hxe/internal/log"
-
-	"gorm.io/gorm"
-)
-
 type ProgramStatus string
 
 const (
-	ProgramStopped ProgramStatus = "stopped"
-	ProgramRunning ProgramStatus = "running"
-	ProgramStarted ProgramStatus = "started"
-	ProgramFailed  ProgramStatus = "failed"
+	ProgramStop    ProgramStatus = "stop"
+	ProgramStart   ProgramStatus = "start"
+	ProgramReload  ProgramStatus = "reload"
+	ProgramRestart ProgramStatus = "restart"
 )
 
+type Group struct {
+	Base
+	ID   uint   `gorm:"primaryKey" json:"id"`
+	Name string `json:"name"`
+
+	Programs []Program `json:"programs" gorm:"foreignKey:GID"`
+}
+
+type Action struct {
+	Name  string     `json:"name"`
+	Desc  string     `json:"desc"`
+	Props []Property `json:"props"`
+}
+
 type Program struct {
-	gorm.Model
-	ID          uint          `gorm:"primaryKey" json:"id"`
-	Name        string        `json:"name"`
-	Description string        `json:"desc"`
-	Command     string        `json:"command"`
-	Args        string        `json:"args"`
+	Base
+	AID         uint          `json:"aid" gorm:"column:aid"`
+	GID         uint          `json:"gid" gorm:"column:gid"`
+	SID         uint          `json:"sid" gorm:"column:sid"`
+	Name        string        `json:"name" gorm:"column:name"`
+	Description string        `json:"desc" gorm:"column:desc"`
+	Command     string        `json:"command" gorm:"column:command"`
+	Args        string        `json:"args" gorm:"column:args"`
 	Directory   string        `json:"cwd"`
 	User        string        `json:"user"`
 	Group       string        `json:"group"`
 	Status      ProgramStatus `json:"status"`
-	PID         int           `json:"pid"`
-	ExitCode    int           `json:"exitCode"`
-	StartTime   int64         `json:"startTime"`
-	EndTime     int64         `json:"endTime"`
+	PID         int           `json:"pid" gorm:"column:pid"`
+	ExitCode    int           `json:"exitCode" gorm:"column:exit"`
+	StartTime   int64         `json:"startTime" gorm:"column:start_time"`
+	EndTime     int64         `json:"endTime" gorm:"column:end_time"`
 	Autostart   bool          `json:"autostart"`
 	Enabled     bool          `json:"enabled"`
 	Retries     int           `json:"retries"`
 	MaxRetries  int           `json:"maxRetries"`
+
+	// Metrics map[string]float64 `json:"metrics" gorm:"serialize:json"`
+	// Actions []Action           `json:"actions" gorm:"serialize:json"`
 }
 
-func (program *Program) AfterSave(tx *gorm.DB) (err error) {
-	// Implement your post-save logic here
-	log.Info().Str("program", program.Name).Str("status", string(program.Status)).Str("command", program.Command).Msgf("Program successfully saved!")
-	return nil
-}
+// func (p *Program) AfterSave(tx *gorm.DB) (err error) {
+// 	// Implement your post-save logic here
+// 	log.Info().Str("program", p.Name).Str("status", string(p.Status)).Str("command", p.Command).Msgf("Program successfully saved!")
+// 	return nil
+// }
