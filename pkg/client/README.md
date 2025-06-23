@@ -1,6 +1,10 @@
-# HXE Client
+# HXE Client Library
 
 A Go client library for interacting with the HXE API server with JWT authentication support.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 or later - see the [LICENSE](../../LICENSE) file for details.
 
 ## Installation
 
@@ -21,19 +25,19 @@ import (
 )
 
 func main() {
-    // Create a client
-    hxeClient := client.NewClient("http://localhost:8080", "admin", "password")
+    // Create client
+    hxeClient := client.NewClient("http://localhost:8080")
     
-    // Get the program client
+    // Get program client
     programClient := hxeClient.Program
     
     // List programs
-    programs, err := programClient.List()
+    programs, err := programClient.ListPrograms()
     if err != nil {
-        log.Fatal(err)
+        log.Fatal("Failed to list programs:", err)
     }
     
-    // Print programs in a table format
+    // Display programs
     programClient.PrintList(programs)
 }
 ```
@@ -49,8 +53,8 @@ import (
 )
 
 func main() {
-    // Create an authenticated client
-    hxeClient := client.NewClient("http://localhost:8080", "admin", "password")
+    // Create authenticated client
+    hxeClient := client.NewAuthenticatedClient("http://localhost:8080", "admin", "password")
     
     // Login to get JWT token
     _, err := hxeClient.Login()
@@ -58,19 +62,19 @@ func main() {
         log.Fatal("Login failed:", err)
     }
     
-    // Get the program client
+    // Get program client
     programClient := hxeClient.Program
     
     // List programs
-    programs, err := programClient.List()
+    programs, err := programClient.ListPrograms()
     if err != nil {
-        log.Fatal(err)
+        log.Fatal("Failed to list programs:", err)
     }
     
-    // Print programs
-    programClient.Print(programs)
+    // Display programs in beautiful table format
+    programClient.PrintList(programs)
     
-    // Logout
+    // Logout when done
     hxeClient.Logout()
 }
 ```
@@ -79,89 +83,59 @@ func main() {
 
 ### Creating Clients
 
-#### `NewClient(baseURL, username, password string) *Client`
-Creates a new authenticated client with the given credentials.
-
+#### NewClient
 ```go
-client := client.NewClient("http://localhost:8080", "admin", "password")
+client := client.NewClient("http://localhost:8080")
 ```
+Creates a basic client without authentication.
 
-### Authentication Methods
+#### NewAuthenticatedClient
+```go
+client := client.NewAuthenticatedClient("http://localhost:8080", "admin", "password")
+```
+Creates a client with authentication credentials.
 
-#### `Login() (*Client, error)`
-Authenticates with the server and retrieves a JWT token.
+### Authentication
 
+#### Login
 ```go
 _, err := client.Login()
-if err != nil {
-    // Handle login error
-}
 ```
+Logs in with the provided credentials and retrieves a JWT token.
 
-#### `Logout()`
-Clears the current JWT token.
-
+#### Logout
 ```go
-client.Logout()
+err := client.Logout()
 ```
+Logs out and clears the JWT token.
 
-#### `RefreshToken() error`
-Refreshes the JWT token.
-
+#### RefreshToken
 ```go
-err := client.RefreshToken()
-if err != nil {
-    // Handle refresh error
-}
+_, err := client.RefreshToken()
 ```
+Refreshes the current JWT token.
 
-#### `SetToken(token string)`
-Manually sets a JWT token.
-
+#### SetToken
 ```go
 client.SetToken("your-jwt-token-here")
 ```
+Manually sets a JWT token.
 
-#### `GetToken() string`
-Returns the current JWT token.
+### Program Management
 
+#### ListPrograms
 ```go
-token := client.GetToken()
+programs, err := programClient.ListPrograms()
 ```
-
-### Program Operations
-
-#### `List() ([]*models.Program, error)`
 Retrieves all programs.
 
+#### GetProgram
 ```go
-programs, err := programClient.List()
+program, err := programClient.GetProgram("program-id")
 ```
-
-#### `Get(id string) (*models.Program, error)`
 Retrieves a specific program by ID.
 
-```go
-program, err := programClient.Get("123")
-```
-
-#### `Status(id string) (*models.Program, error)`
-Gets the status of a program (alias for Get).
-
-```go
-program, err := programClient.Status("123")
-```
-
-#### `MultiStatus(ids ...string) ([]*models.Program, error)`
-Gets the status of multiple programs.
-
-```go
-programs, err := programClient.MultiStatus("123", "456", "789")
-```
-
-#### `Create(program *models.Program) (*models.Program, error)`
-Creates a new program.
-
+#### CreateProgram
 ```go
 newProgram := &models.Program{
     Name:        "My Program",
@@ -172,196 +146,96 @@ newProgram := &models.Program{
     User:        "nobody",
     Group:       "nobody",
     Enabled:     true,
+    AutoRestart: true,
+    MaxRestarts: 3,
 }
-
-created, err := programClient.Create(newProgram)
+created, err := programClient.CreateProgram(newProgram)
 ```
+Creates a new program.
 
-#### `Update(id string, program *models.Program) (*models.Program, error)`
+#### UpdateProgram
+```go
+program.Name = "Updated Name"
+updated, err := programClient.UpdateProgram(program.ID, program)
+```
 Updates an existing program.
 
+#### DeleteProgram
 ```go
-program.Name = "Updated Program Name"
-updated, err := programClient.Update("123", program)
+err := programClient.DeleteProgram("program-id")
 ```
-
-#### `Delete(id string) (*models.Program, error)`
 Deletes a program.
 
+#### StartProgram
 ```go
-deleted, err := programClient.Delete("123")
+_, err := programClient.StartProgram("program-id")
 ```
-
-#### `MultiDelete(ids ...string) ([]*models.Program, error)`
-Deletes multiple programs.
-
-```go
-deleted, err := programClient.MultiDelete("123", "456", "789")
-```
-
-### Runtime Operations
-
-#### `Start(id string) (*models.Program, error)`
 Starts a program.
 
+#### StopProgram
 ```go
-program, err := programClient.Start("123")
+_, err := programClient.StopProgram("program-id")
 ```
-
-#### `MultiStart(ids ...string) ([]*models.Program, error)`
-Starts multiple programs.
-
-```go
-programs, err := programClient.MultiStart("123", "456", "789")
-```
-
-#### `Stop(id string) (*models.Program, error)`
 Stops a program.
 
+#### RestartProgram
 ```go
-program, err := programClient.Stop("123")
+_, err := programClient.RestartProgram("program-id")
 ```
-
-#### `MultiStop(ids ...string) ([]*models.Program, error)`
-Stops multiple programs.
-
-```go
-programs, err := programClient.MultiStop("123", "456", "789")
-```
-
-#### `Restart(id string) (*models.Program, error)`
 Restarts a program.
 
+#### EnableAutostart
 ```go
-program, err := programClient.Restart("123")
+_, err := programClient.EnableAutostart("program-id")
 ```
+Enables autostart for a program.
 
-#### `MultiRestart(ids ...string) ([]*models.Program, error)`
-Restarts multiple programs.
-
+#### DisableAutostart
 ```go
-programs, err := programClient.MultiRestart("123", "456", "789")
+_, err := programClient.DisableAutostart("program-id")
 ```
-
-#### `Enable(id string) (*models.Program, error)`
-Enables a program for autostart.
-
-```go
-program, err := programClient.Enable("123")
-```
-
-#### `MultiEnable(ids ...string) ([]*models.Program, error)`
-Enables multiple programs for autostart.
-
-```go
-programs, err := programClient.MultiEnable("123", "456", "789")
-```
-
-#### `Disable(id string) (*models.Program, error)`
-Disables a program from autostart.
-
-```go
-program, err := programClient.Disable("123")
-```
-
-#### `MultiDisable(ids ...string) ([]*models.Program, error)`
-Disables multiple programs from autostart.
-
-```go
-programs, err := programClient.MultiDisable("123", "456", "789")
-```
-
-#### `Reload(id string) (*models.Program, error)`
-Reloads a program's configuration.
-
-```go
-program, err := programClient.Reload("123")
-```
-
-#### `MultiReload(ids ...string) ([]*models.Program, error)`
-Reloads multiple programs' configurations.
-
-```go
-programs, err := programClient.MultiReload("123", "456", "789")
-```
-
-### Advanced Operations
-
-#### `Run(command string) (*models.Program, error)`
-Creates and starts a program with the given command.
-
-```go
-program, err := programClient.Run("python3 /path/to/script.py")
-```
-
-#### `Shell(id string) (*models.Program, error)`
-Opens an interactive shell for a program.
-
-```go
-program, err := programClient.Shell("123")
-```
-
-#### `Tail(id string) (*models.Program, error)`
-Follows the logs of a program.
-
-```go
-program, err := programClient.Tail("123")
-```
+Disables autostart for a program.
 
 ### Display Methods
 
-#### `Print(programs []*models.Program)`
-Intelligently displays programs based on count:
-- 0 programs: Shows "No programs found"
-- 1 program: Shows detailed view
-- Multiple programs: Shows list view
-
+#### PrintList
 ```go
-programs, err := programClient.List()
-if err != nil {
-    log.Fatal(err)
-}
-programClient.Print(programs)
-```
-
-#### `PrintDetail(program *models.Program)`
-Displays a single program in detailed table format.
-
-```go
-program, err := programClient.Get("123")
-if err != nil {
-    log.Fatal(err)
-}
-programClient.PrintDetail(program)
-```
-
-#### `PrintList(programs []*models.Program)`
-Displays multiple programs in a table format.
-
-```go
-programs, err := programClient.List()
-if err != nil {
-    log.Fatal(err)
-}
 programClient.PrintList(programs)
 ```
+Displays programs in a beautiful table format.
+
+#### PrintDetail
+```go
+programClient.PrintDetail(program)
+```
+Displays detailed information about a program.
 
 ## Authentication
 
-The client supports JWT authentication with the following features:
+The client supports JWT authentication with the following flow:
 
-- **Automatic token management**: Tokens are automatically included in API requests
-- **Token refresh**: Tokens can be refreshed before expiration
-- **Manual token management**: Tokens can be set manually if needed
-- **Default credentials**: Username `admin`, password `password`
+1. **Login**: Call `Login()` with credentials to get a JWT token
+2. **Automatic Token Usage**: The client automatically includes the token in `Authorization: Bearer <token>` header
+3. **Token Refresh**: Use `RefreshToken()` to refresh expired tokens
+4. **Logout**: Call `Logout()` to clear the token
 
-### Authentication Flow
+### Default Credentials
+- **Username**: `admin`
+- **Password**: `password`
 
-1. Create a client with credentials
-2. Call `Login()` to authenticate and get a JWT token
-3. The token is automatically included in subsequent API requests
-4. Use `RefreshToken()` to extend the token's validity
-5. Call `Logout()` to clear the token
+### Manual Token Management
+```go
+// Set token manually
+client.SetToken("your-jwt-token-here")
+
+// Check if token is set
+if client.HasToken() {
+    fmt.Println("Token is set")
+}
+
+// Get current token
+token := client.GetToken()
+```
 
 ## Program Model
 
@@ -369,120 +243,48 @@ The `models.Program` struct contains the following fields:
 
 ```go
 type Program struct {
-    ID          uint          `json:"id"`
-    AID         uint          `json:"aid"`
-    GID         uint          `json:"gid"`
-    SID         uint          `json:"sid"`
-    Name        string        `json:"name"`
-    Description string        `json:"desc"`
-    Command     string        `json:"command"`
-    Args        string        `json:"args"`
-    Directory   string        `json:"cwd"`
-    User        string        `json:"user"`
-    Group       string        `json:"group"`
-    Status      ProgramStatus `json:"status"`
-    PID         int           `json:"pid"`
-    ExitCode    int           `json:"exitCode"`
-    StartTime   int64         `json:"startTime"`
-    EndTime     int64         `json:"endTime"`
-    Autostart   bool          `json:"autostart"`
-    Enabled     bool          `json:"enabled"`
-    Retries     int           `json:"retries"`
-    MaxRetries  int           `json:"maxRetries"`
+    ID          string    `json:"id"`
+    Name        string    `json:"name"`
+    Description string    `json:"description"`
+    Command     string    `json:"command"`
+    Args        string    `json:"args"`
+    Directory   string    `json:"directory"`
+    User        string    `json:"user"`
+    Group       string    `json:"group"`
+    Enabled     bool      `json:"enabled"`
+    AutoRestart bool      `json:"auto_restart"`
+    MaxRestarts int       `json:"max_restarts"`
+    Status      string    `json:"status"`
+    PID         int       `json:"pid"`
+    CreatedAt   time.Time `json:"created_at"`
+    UpdatedAt   time.Time `json:"updated_at"`
 }
 ```
 
 ## Error Handling
 
-The client returns errors for various scenarios:
+The client may return various types of errors:
 
-- Network errors
-- HTTP errors (4xx, 5xx)
-- Authentication errors (401 Unauthorized)
-- API errors (server-side errors)
-- JSON parsing errors
+- **Authentication errors**: Invalid credentials, expired tokens
+- **Network errors**: Connection issues, timeouts
+- **API errors**: Server errors, validation errors
+- **Not found errors**: Programs that don't exist
 
-All errors include descriptive messages to help with debugging.
+```go
+if err != nil {
+    switch {
+    case client.IsUnauthorized(err):
+        fmt.Println("Authentication required")
+    case client.IsNotFound(err):
+        fmt.Println("Program not found")
+    case client.IsServerError(err):
+        fmt.Println("Server error occurred")
+    default:
+        fmt.Printf("Unexpected error: %v\n", err)
+    }
+}
+```
 
 ## Examples
 
-See `examples/client/programs/main.go` for complete examples of how to use the client with and without authentication.
-
-### Complete Example
-
-```go
-package main
-
-import (
-    "log"
-    "github.com/rangertaha/hxe/pkg/client"
-)
-
-func main() {
-    // Create authenticated client
-    hxeClient := client.NewClient("http://localhost:8080", "admin", "password")
-    
-    // Login
-    _, err := hxeClient.Login()
-    if err != nil {
-        log.Fatal("Login failed:", err)
-    }
-    
-    programClient := hxeClient.Program
-    
-    // List all programs
-    programs, err := programClient.List()
-    if err != nil {
-        log.Fatal("Failed to list programs:", err)
-    }
-    
-    // Display programs
-    programClient.Print(programs)
-    
-    // Create a new program
-    newProgram := &models.Program{
-        Name:        "Test Program",
-        Description: "A test program",
-        Command:     "/usr/bin/python3",
-        Args:        "test.py",
-        Directory:   "/tmp",
-        User:        "nobody",
-        Group:       "nobody",
-        Enabled:     true,
-    }
-    
-    created, err := programClient.Create(newProgram)
-    if err != nil {
-        log.Fatal("Failed to create program:", err)
-    }
-    
-    // Start the program
-    started, err := programClient.Start(created.ID)
-    if err != nil {
-        log.Fatal("Failed to start program:", err)
-    }
-    
-    // Get program status
-    status, err := programClient.Status(created.ID)
-    if err != nil {
-        log.Fatal("Failed to get status:", err)
-    }
-    
-    // Display program details
-    programClient.PrintDetail(status)
-    
-    // Stop the program
-    stopped, err := programClient.Stop(created.ID)
-    if err != nil {
-        log.Fatal("Failed to stop program:", err)
-    }
-    
-    // Delete the program
-    deleted, err := programClient.Delete(created.ID)
-    if err != nil {
-        log.Fatal("Failed to delete program:", err)
-    }
-    
-    // Logout
-    hxeClient.Logout()
-} 
+See `examples/client/programs/main.go` for complete examples of client usage. 

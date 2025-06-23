@@ -5,14 +5,15 @@ HXE - Host eXecution Engine
 A powerful host-based process execution engine with JWT authentication, comprehensive API, and beautiful client interfaces.
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPLv3+-green.svg)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rangertaha/hxe)](https://goreportcard.com/report/github.com/rangertaha/hxe)
 
 ## Features
 
 - 🔐 **JWT Authentication**: Secure authentication with token-based access
 - 🚀 **Program Management**: Start, stop, restart, and monitor programs
-- 🖥️ **Desktop Interface**: Modern web-based UI for program management
-- 💻 **Command Line Interface**: Full-featured CLI with beautiful table formatting
+- 🖥️ **Desktop App**: Modern web-based UI for program management
+- 💻 **Command Line App**: Full-featured CLI with beautiful table formatting
 - 🔧 **Configuration**: HCL-based configuration files
 - 📊 **Monitoring**: Real-time program status and logs
 - 🔄 **Auto-restart**: Automatic program recovery on failure
@@ -49,6 +50,22 @@ go build -o bin/hxe ./cmd/hxe
 
 # Install globally (optional)
 sudo cp bin/hxe /usr/local/bin/
+```
+
+### Using GitHub Packages
+
+HXE is available as a Go module from GitHub Packages:
+
+```bash
+# Configure Go to use GitHub Packages
+export GOPRIVATE=github.com/rangertaha/hxe
+export GOPROXY=https://proxy.golang.org,direct
+
+# Install HXE
+go install github.com/rangertaha/hxe/cmd/hxe@latest
+
+# Or add to your project
+go get github.com/rangertaha/hxe/pkg/client
 ```
 
 ### Using Make
@@ -88,7 +105,7 @@ import (
 
 func main() {
     // Create authenticated client
-    hxeClient := client.NewClient("http://localhost:8080", "admin", "password")
+    hxeClient := client.NewAuthenticatedClient("http://localhost:8080", "admin", "password")
     
     // Login to get JWT token
     _, err := hxeClient.Login()
@@ -99,13 +116,13 @@ func main() {
     programClient := hxeClient.Program
     
     // List all programs
-    programs, err := programClient.List()
+    programs, err := programClient.ListPrograms()
     if err != nil {
         log.Fatal("Failed to list programs:", err)
     }
     
     // Display programs in beautiful table format
-    programClient.Print(programs)
+    programClient.PrintList(programs)
     
     // Create a new program
     newProgram := &models.Program{
@@ -119,13 +136,13 @@ func main() {
         Enabled:     true,
     }
     
-    created, err := programClient.Create(newProgram)
+    created, err := programClient.CreateProgram(newProgram)
     if err != nil {
         log.Fatal("Failed to create program:", err)
     }
     
     // Start the program
-    _, err = programClient.Start(created.ID)
+    _, err = programClient.StartProgram(created.ID)
     if err != nil {
         log.Fatal("Failed to start program:", err)
     }
@@ -219,8 +236,8 @@ HXE uses JWT authentication. Default credentials:
 The HXE client library provides a comprehensive Go API:
 
 ```go
-// Create client
-client := client.NewClient("http://localhost:8080", "admin", "password")
+// Create authenticated client
+client := client.NewAuthenticatedClient("http://localhost:8080", "admin", "password")
 
 // Login
 _, err := client.Login()
@@ -229,28 +246,22 @@ _, err := client.Login()
 programClient := client.Program
 
 // CRUD operations
-programs, _ := programClient.List()
-program, _ := programClient.Get("123")
-created, _ := programClient.Create(newProgram)
-updated, _ := programClient.Update("123", program)
-deleted, _ := programClient.Delete("123")
+programs, _ := programClient.ListPrograms()
+program, _ := programClient.GetProgram("123")
+created, _ := programClient.CreateProgram(newProgram)
+updated, _ := programClient.UpdateProgram("123", program)
+deleted, _ := programClient.DeleteProgram("123")
 
 // Runtime operations
-_, _ = programClient.Start("123")
-_, _ = programClient.Stop("123")
-_, _ = programClient.Restart("123")
-_, _ = programClient.Enable("123")
-_, _ = programClient.Disable("123")
-
-// Multi-operations
-_, _ = programClient.MultiStart("123", "456", "789")
-_, _ = programClient.MultiStop("123", "456", "789")
-_, _ = programClient.MultiDelete("123", "456", "789")
+_, _ = programClient.StartProgram("123")
+_, _ = programClient.StopProgram("123")
+_, _ = programClient.RestartProgram("123")
+_, _ = programClient.EnableAutostart("123")
+_, _ = programClient.DisableAutostart("123")
 
 // Display methods
-programClient.Print(programs)        // Smart display
-programClient.PrintDetail(program)   // Detailed view
-programClient.PrintList(programs)    // Table view
+programClient.PrintList(programs)        // Table view
+programClient.PrintDetail(program)       // Detailed view
 ```
 
 ## Usage
@@ -382,12 +393,13 @@ go test ./internal/api
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 or later - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
 - Inspired by [Supervisord](http://supervisord.org/), [PM2](https://pm2.keymetrics.io/), and [Systemd](https://systemd.io/)
-- Built with [Go](https://golang.org/), [Echo](https://echo.labstack.com/), [GORM](https://gorm.io/), and [React](https://reactjs.org/)
+- Server Built with [Go](https://golang.org/), [Echo](https://echo.labstack.com/), [GORM](https://gorm.io/), and [NATS](https://nats.io/)
+- Desktop App Built with [React](https://reactjs.org/), [Tauri](https://v2.tauri.app/), and [Rust](https://www.rust-lang.org/)
 
 ## Support
 
