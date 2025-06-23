@@ -397,9 +397,9 @@ This project is licensed under the GNU General Public License v3.0 or later - se
 
 ## Acknowledgments
 
-- Inspired by [Supervisord](http://supervisord.org/), [PM2](https://pm2.keymetrics.io/), and [Systemd](https://systemd.io/)
+- Inspired by [Supervisord](http://supervisord.org/), [PM2](https://pm2.keymetrics.io/), [Pueue](https://crates.io/crates/pueue) and [Systemd](https://systemd.io/)
 - Server Built with [Go](https://golang.org/), [Echo](https://echo.labstack.com/), [GORM](https://gorm.io/), and [NATS](https://nats.io/)
-- Desktop App Built with [React](https://reactjs.org/), [Tauri](https://v2.tauri.app/), and [Rust](https://www.rust-lang.org/)
+- Desktop App Built with [React](https://reactjs.org/), [Typescript](https://www.typescriptlang.org/), [Tauri](https://v2.tauri.app/), and [Rust](https://www.rust-lang.org/)
 
 ## Support
 
