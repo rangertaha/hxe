@@ -27,33 +27,33 @@ import (
 	"github.com/rangertaha/hxe/internal/models"
 )
 
-type ProgramClient struct {
+type ServiceClient struct {
 	client *Client
 	schema *models.Schema
 }
 
-func NewProgramClient(client *Client) *ProgramClient {
-	return &ProgramClient{client: client, schema: models.ProgramSchema()}
+func NewServiceClient(client *Client) *ServiceClient {
+	return &ServiceClient{client: client, schema: models.ServiceSchema()}
 }
 
-// Program operations
-func (c *ProgramClient) List() ([]*models.Program, error) {
-	var programs []*models.Program
+// Service operations
+func (c *ServiceClient) List() ([]*models.Service, error) {
+	var programs []*models.Service
 	err := c.client.Get("/api/program", &programs)
 	return programs, err
 }
 
-func (c *ProgramClient) Get(id string) (*models.Program, error) {
-	var program *models.Program
+func (c *ServiceClient) Get(id string) (*models.Service, error) {
+	var program *models.Service
 	err := c.client.Get(fmt.Sprintf("/api/program/%s", id), &program)
 	return program, err
 }
 
-func (c *ProgramClient) Status(id string) (*models.Program, error) {
+func (c *ServiceClient) Status(id string) (*models.Service, error) {
 	return c.Get(id)
 }
 
-func (c *ProgramClient) MultiStatus(ids ...string) (programs []*models.Program, err error) {
+func (c *ServiceClient) MultiStatus(ids ...string) (programs []*models.Service, err error) {
 	for _, id := range ids {
 		program, err := c.Status(id)
 		if err != nil {
@@ -64,25 +64,25 @@ func (c *ProgramClient) MultiStatus(ids ...string) (programs []*models.Program, 
 	return programs, nil
 }
 
-func (c *ProgramClient) Create(program *models.Program) (*models.Program, error) {
-	var created models.Program
+func (c *ServiceClient) Create(program *models.Service) (*models.Service, error) {
+	var created models.Service
 	err := c.client.Post("/api/program", program, &created)
 	return &created, err
 }
 
-func (c *ProgramClient) Update(id string, program *models.Program) (*models.Program, error) {
-	var updated models.Program
+func (c *ServiceClient) Update(id string, program *models.Service) (*models.Service, error) {
+	var updated models.Service
 	err := c.client.Put(fmt.Sprintf("/api/program/%s", id), program, &updated)
 	return &updated, err
 }
 
-func (c *ProgramClient) Delete(id string) (*models.Program, error) {
-	var deleted models.Program
+func (c *ServiceClient) Delete(id string) (*models.Service, error) {
+	var deleted models.Service
 	err := c.client.Delete(fmt.Sprintf("/api/program/%s", id), &deleted)
 	return &deleted, err
 }
 
-func (c *ProgramClient) MultiDelete(ids ...string) (programs []*models.Program, err error) {
+func (c *ServiceClient) MultiDelete(ids ...string) (programs []*models.Service, err error) {
 	for _, id := range ids {
 		program, err := c.Delete(id)
 		if err != nil {
@@ -93,13 +93,13 @@ func (c *ProgramClient) MultiDelete(ids ...string) (programs []*models.Program, 
 	return programs, nil
 }
 
-func (c *ProgramClient) Start(id string) (*models.Program, error) {
-	var program models.Program
+func (c *ServiceClient) Start(id string) (*models.Service, error) {
+	var program models.Service
 	err := c.client.Post(fmt.Sprintf("/api/program/%s/start", id), nil, &program)
 	return &program, err
 }
 
-func (c *ProgramClient) MultiStart(ids ...string) (programs []*models.Program, err error) {
+func (c *ServiceClient) MultiStart(ids ...string) (programs []*models.Service, err error) {
 	for _, id := range ids {
 		program, err := c.Start(id)
 		if err != nil {
@@ -110,13 +110,13 @@ func (c *ProgramClient) MultiStart(ids ...string) (programs []*models.Program, e
 	return programs, nil
 }
 
-func (c *ProgramClient) Stop(id string) (*models.Program, error) {
-	var program models.Program
+func (c *ServiceClient) Stop(id string) (*models.Service, error) {
+	var program models.Service
 	err := c.client.Post(fmt.Sprintf("/api/program/%s/stop", id), nil, &program)
 	return &program, err
 }
 
-func (c *ProgramClient) MultiStop(ids ...string) (programs []*models.Program, err error) {
+func (c *ServiceClient) MultiStop(ids ...string) (programs []*models.Service, err error) {
 	for _, id := range ids {
 		program, err := c.Stop(id)
 		if err != nil {
@@ -127,13 +127,13 @@ func (c *ProgramClient) MultiStop(ids ...string) (programs []*models.Program, er
 	return programs, nil
 }
 
-func (c *ProgramClient) Restart(id string) (*models.Program, error) {
-	var program models.Program
+func (c *ServiceClient) Restart(id string) (*models.Service, error) {
+	var program models.Service
 	err := c.client.Post(fmt.Sprintf("/api/program/%s/restart", id), nil, &program)
 	return &program, err
 }
 
-func (c *ProgramClient) MultiRestart(ids ...string) (programs []*models.Program, err error) {
+func (c *ServiceClient) MultiRestart(ids ...string) (programs []*models.Service, err error) {
 	for _, id := range ids {
 		program, err := c.Restart(id)
 		if err != nil {
@@ -144,13 +144,13 @@ func (c *ProgramClient) MultiRestart(ids ...string) (programs []*models.Program,
 	return programs, nil
 }
 
-func (c *ProgramClient) Enable(id string) (*models.Program, error) {
-	var program models.Program
+func (c *ServiceClient) Enable(id string) (*models.Service, error) {
+	var program models.Service
 	err := c.client.Post(fmt.Sprintf("/api/program/%s/enable", id), nil, &program)
 	return &program, err
 }
 
-func (c *ProgramClient) MultiEnable(ids ...string) (programs []*models.Program, err error) {
+func (c *ServiceClient) MultiEnable(ids ...string) (programs []*models.Service, err error) {
 	for _, id := range ids {
 		program, err := c.Enable(id)
 		if err != nil {
@@ -161,13 +161,13 @@ func (c *ProgramClient) MultiEnable(ids ...string) (programs []*models.Program, 
 	return programs, nil
 }
 
-func (c *ProgramClient) Disable(id string) (*models.Program, error) {
-	var program models.Program
+func (c *ServiceClient) Disable(id string) (*models.Service, error) {
+	var program models.Service
 	err := c.client.Post(fmt.Sprintf("/api/program/%s/disable", id), nil, &program)
 	return &program, err
 }
 
-func (c *ProgramClient) MultiDisable(ids ...string) (programs []*models.Program, err error) {
+func (c *ServiceClient) MultiDisable(ids ...string) (programs []*models.Service, err error) {
 	for _, id := range ids {
 		program, err := c.Disable(id)
 		if err != nil {
@@ -178,13 +178,13 @@ func (c *ProgramClient) MultiDisable(ids ...string) (programs []*models.Program,
 	return programs, nil
 }
 
-func (c *ProgramClient) Reload(id string) (*models.Program, error) {
-	var program models.Program
+func (c *ServiceClient) Reload(id string) (*models.Service, error) {
+	var program models.Service
 	err := c.client.Post(fmt.Sprintf("/api/program/%s/reload", id), nil, &program)
 	return &program, err
 }
 
-func (c *ProgramClient) MultiReload(ids ...string) (programs []*models.Program, err error) {
+func (c *ServiceClient) MultiReload(ids ...string) (programs []*models.Service, err error) {
 	for _, id := range ids {
 		program, err := c.Reload(id)
 		if err != nil {
@@ -195,19 +195,19 @@ func (c *ProgramClient) MultiReload(ids ...string) (programs []*models.Program, 
 	return programs, nil
 }
 
-func (c *ProgramClient) Shell(id string) (*models.Program, error) {
-	var program models.Program
+func (c *ServiceClient) Shell(id string) (*models.Service, error) {
+	var program models.Service
 	err := c.client.Post(fmt.Sprintf("/api/program/%s/shell", id), nil, &program)
 	return &program, err
 }
 
-func (c *ProgramClient) Tail(id string) (*models.Program, error) {
-	var program models.Program
+func (c *ServiceClient) Tail(id string) (*models.Service, error) {
+	var program models.Service
 	err := c.client.Post(fmt.Sprintf("/api/program/%s/tail", id), nil, &program)
 	return &program, err
 }
 
-func (c *ProgramClient) Run(command string) (*models.Program, error) {
+func (c *ServiceClient) Run(command string) (*models.Service, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		dir = "/tmp"
@@ -218,19 +218,19 @@ func (c *ProgramClient) Run(command string) (*models.Program, error) {
 		return nil, fmt.Errorf("failed to get current user: %w", err)
 	}
 
-	program := models.Program{
+	program := models.Service{
 		Command:   command,
 		Directory: dir,
 		User:      currentUser.Username,
 		Group:     currentUser.Gid,
-		Status:    models.ProgramStart,
+		Status:    models.ServiceStart,
 		Enabled:   true,
 	}
 
 	return c.Create(&program)
 }
 
-func (c *ProgramClient) PrintDetail(program *models.Program) {
+func (c *ServiceClient) PrintDetail(program *models.Service) {
 	// Create table
 	t := table.NewWriter()
 	t.SetOutputMirror(nil)
@@ -248,7 +248,7 @@ func (c *ProgramClient) PrintDetail(program *models.Program) {
 	fmt.Println(t.Render())
 }
 
-func (c *ProgramClient) PrintList(programs []*models.Program) {
+func (c *ServiceClient) PrintList(programs []*models.Service) {
 	// Create table
 	t := table.NewWriter()
 	t.SetOutputMirror(nil)
@@ -269,7 +269,7 @@ func (c *ProgramClient) PrintList(programs []*models.Program) {
 	fmt.Println(t.Render())
 }
 
-func (c *ProgramClient) Print(programs []*models.Program) {
+func (c *ServiceClient) Print(programs []*models.Service) {
 	if len(programs) == 10 {
 		fmt.Println("No programs found")
 		return

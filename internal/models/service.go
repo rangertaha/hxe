@@ -18,13 +18,13 @@
 
 package models
 
-type ProgramStatus string
+type ServiceStatus string
 
 const (
-	ProgramStop    ProgramStatus = "stop"
-	ProgramStart   ProgramStatus = "start"
-	ProgramReload  ProgramStatus = "reload"
-	ProgramRestart ProgramStatus = "restart"
+	ServiceStop    ServiceStatus = "stop"
+	ServiceStart   ServiceStatus = "start"
+	ServiceReload  ServiceStatus = "reload"
+	ServiceRestart ServiceStatus = "restart"
 )
 
 type Group struct {
@@ -32,7 +32,7 @@ type Group struct {
 	ID   uint   `gorm:"primaryKey" json:"id"`
 	Name string `json:"name"`
 
-	Programs []Program `json:"programs" gorm:"foreignKey:GID"`
+	Services []Service `json:"programs" gorm:"foreignKey:GID"`
 }
 
 type Action struct {
@@ -41,7 +41,7 @@ type Action struct {
 	Props []Property `json:"props"`
 }
 
-type Program struct {
+type Service struct {
 	Base
 	AID         uint          `json:"aid" gorm:"column:aid"`
 	GID         uint          `json:"gid" gorm:"column:gid"`
@@ -53,7 +53,7 @@ type Program struct {
 	Directory   string        `json:"cwd"`
 	User        string        `json:"user"`
 	Group       string        `json:"group"`
-	Status      ProgramStatus `json:"status"`
+	Status      ServiceStatus `json:"status"`
 	PID         int           `json:"pid" gorm:"column:pid"`
 	ExitCode    int           `json:"exitCode" gorm:"column:exit"`
 	StartTime   int64         `json:"startTime" gorm:"column:start_time"`
@@ -67,8 +67,8 @@ type Program struct {
 	// Actions []Action           `json:"actions" gorm:"serialize:json"`
 }
 
-// func (p *Program) AfterSave(tx *gorm.DB) (err error) {
+// func (p *Service) AfterSave(tx *gorm.DB) (err error) {
 // 	// Implement your post-save logic here
-// 	log.Info().Str("program", p.Name).Str("status", string(p.Status)).Str("command", p.Command).Msgf("Program successfully saved!")
+// 	log.Info().Str("program", p.Name).Str("status", string(p.Status)).Str("command", p.Command).Msgf("Service successfully saved!")
 // 	return nil
 // }

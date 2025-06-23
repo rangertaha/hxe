@@ -42,8 +42,8 @@ import (
 
 const (
 	CONFIG_DIR      = "hxe"
-	CONFIG_FILE     = "config.hcl"
-	PROGRAM_FILE    = "example.hcl"
+	CONFIG_FILE     = "server.hcl"
+	PROCESS_FILE    = "example.hcl"
 	DATABASE_FILE   = "hxe.db"
 	DEFAULT_SUBJECT = "hxe"
 )
@@ -52,8 +52,8 @@ var (
 	//go:embed config.hcl
 	DefaultConfig []byte
 
-	//go:embed program.hcl
-	DefaultProgram []byte
+	//go:embed example.hcl
+	DefaultExample []byte
 )
 
 type (
@@ -64,7 +64,7 @@ type (
 		Banner  bool   `hcl:"banner,optional"`
 		ProgDir string `hcl:"programs,optional"`
 
-		Programs []models.Program
+		Services []models.Service
 		Database Database `hcl:"database,block"`
 		Broker   Broker   `hcl:"broker,block"`
 		API      API      `hcl:"api,block"`
@@ -77,15 +77,7 @@ type (
 		Username string `hcl:"username,optional"`
 		Password string `hcl:"password,optional"`
 		Token    string `hcl:"token,optional"`
-		Client   Client `hcl:"client,block"`
-	}
-	Client struct {
-		Host     string `hcl:"addr,optional"`
-		Port     int    `hcl:"port,optional"`
 		URL      string `hcl:"url,optional"`
-		Token    string `hcl:"token,optional"`
-		Username string `hcl:"username,optional"`
-		Password string `hcl:"password,optional"`
 	}
 	Database struct {
 		Type     string `hcl:"type,optional"`
@@ -128,6 +120,10 @@ func New(options ...func(*Config) error) (*Config, error) {
 		internal.PrintBanner()
 	}
 
+	if s.API.URL == "" {
+		s.API.URL = fmt.Sprintf("http://%s:%d", s.API.Host, s.API.Port)
+	}
+
 	return s, nil
 }
 
@@ -138,7 +134,7 @@ func (c *Config) LoadConfig(path string) (err error) {
 	return
 }
 
-func (c *Config) LoadProgram(ppath string) (err error) {
+func (c *Config) LoadService(ppath string) (err error) {
 	log.Info().Str("path", ppath).Msg("loading programs from directory")
 	err = filepath.WalkDir(ppath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -148,12 +144,12 @@ func (c *Config) LoadProgram(ppath string) (err error) {
 
 		if !d.IsDir() {
 			log.Info().Str("file", path).Msg("loading program")
-			var program models.Program
+			var program models.Service
 			if strings.HasSuffix(path, ".hcl") {
 				if err := hclsimple.DecodeFile(path, CtxFunctions, &program); err != nil {
 					log.Warn().Err(err).Str("file", path).Msg("failed to parse program file")
 				} else {
-					c.Programs = append(c.Programs, program)
+					c.Services = append(c.Services, program)
 				}
 			}
 		}
@@ -167,7 +163,7 @@ func (c *Config) LoadProgram(ppath string) (err error) {
 	}
 
 	// Update the config with loaded programs
-	log.Info().Int("count", len(c.Programs)).Msg("finished loading programs")
+	log.Info().Int("count", len(c.Services)).Msg("finished loading programs")
 	return
 }
 
@@ -193,7 +189,7 @@ func (c *Config) LoadDatabase(db Database) (err error) {
 	// Auto migrate the schema
 	if db.Migrate {
 		models.AutoMigrate(models.DB)
-		SeedPrograms(models.DB)
+		SeedServices(models.DB)
 	}
 
 	if c.Debug {
@@ -223,7 +219,7 @@ func FileOption(path string) func(*Config) error {
 			return fmt.Errorf("error parsing config file: %w", err)
 		}
 
-		if err := c.LoadProgram(c.ProgDir); err != nil {
+		if err := c.LoadService(c.ProgDir); err != nil {
 			return fmt.Errorf("error parsing program file: %w", err)
 		}
 
@@ -242,9 +238,9 @@ func DefaultOptions() func(*Config) error {
 			return fmt.Errorf("error creating config file: %w", err)
 		}
 
-		c.ProgDir = filepath.Join(userConfigDir, CONFIG_DIR, "programs")
-		exampleFile := filepath.Join(c.ProgDir, PROGRAM_FILE)
-		if err := createFileIfNotExists(exampleFile, DefaultProgram); err != nil {
+		c.ProgDir = filepath.Join(userConfigDir, CONFIG_DIR, "configs")
+		exampleFile := filepath.Join(c.ProgDir, PROCESS_FILE)
+		if err := createFileIfNotExists(exampleFile, DefaultExample); err != nil {
 			return fmt.Errorf("error creating default program config: %w", err)
 		}
 
@@ -252,12 +248,16 @@ func DefaultOptions() func(*Config) error {
 			return fmt.Errorf("error parsing config file: %w", err)
 		}
 
-		if err := c.LoadProgram(c.ProgDir); err != nil {
+		if err := c.LoadService(c.ProgDir); err != nil {
 			return fmt.Errorf("error parsing program file: %w", err)
 		}
 
 		if err := c.LoadDatabase(c.Database); err != nil {
 			return fmt.Errorf("error parsing database file: %w", err)
+		}
+
+		if c.API.URL == "" {
+			c.API.URL = fmt.Sprintf("http://%s:%d", c.API.Host, c.API.Port)
 		}
 
 		return nil

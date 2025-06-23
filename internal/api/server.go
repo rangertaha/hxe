@@ -145,27 +145,28 @@ func New(b internal.Broker) *echo.Echo {
 	api.POST("/auth/refresh", authHandler.Refresh)
 	api.POST("/auth/logout", authHandler.Logout)
 
+	// Services
 	// Initialize CRUD handlers
-	proc := handlers.NewProgram(b)
-	api.GET("/program", proc.List)
-	api.GET("/program/:id", proc.Get)
-	api.POST("/program", proc.Create)
-	api.PUT("/program/:id", proc.Update)
-	api.DELETE("/program/:id", proc.Delete)
-	api.OPTIONS("/program", proc.Schema)
+	proc := handlers.NewService(b)
+	api.GET("/service", proc.List)
+	api.GET("/service/:id", proc.Get)
+	api.POST("/service", proc.Create)
+	api.PUT("/service/:id", proc.Update)
+	api.DELETE("/service/:id", proc.Delete)
+	api.OPTIONS("/service", proc.Schema)
 
 	// Runtime handlers
-	api.POST("/program/:id/start", proc.Start)
-	api.POST("/program/:id/stop", proc.Stop)
-	api.POST("/program/:id/restart", proc.Restart)
-	api.POST("/program/:id/status", proc.Status)
-	api.POST("/program/:id/reload", proc.Reload)
-	api.POST("/program/:id/enable", proc.Enable)
-	api.POST("/program/:id/disable", proc.Disable)
+	api.POST("/service/:id/start", proc.Start)
+	api.POST("/service/:id/stop", proc.Stop)
+	api.POST("/service/:id/restart", proc.Restart)
+	api.POST("/service/:id/status", proc.Status)
+	api.POST("/service/:id/reload", proc.Reload)
+	api.POST("/service/:id/enable", proc.Enable)
+	api.POST("/service/:id/disable", proc.Disable)
 
 	// Stream handlers
-	api.POST("/program/:id/shell", proc.Shell)
-	api.POST("/program/:id/tail", proc.Tail)
+	api.POST("/service/:id/shell", proc.Shell)
+	api.POST("/service/:id/log", proc.Log)
 
 	return e
 }

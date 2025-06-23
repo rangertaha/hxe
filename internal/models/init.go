@@ -34,7 +34,7 @@ type Base struct {
 type App struct {
 	Base
 	ID       string    `gorm:"primaryKey" json:"id"`
-	Programs []Program `json:"programs" gorm:"foreignKey:AID"`
+	Services []Service `json:"programs" gorm:"foreignKey:AID"`
 }
 
 type Schema struct {
@@ -56,11 +56,11 @@ type Property struct {
 func AutoMigrate(db *gorm.DB) {
 	db.AutoMigrate(
 		&App{},
-		&Program{},
+		&Service{},
 	)
 }
 
-func ProgramSchema() *Schema {
+func ServiceSchema() *Schema {
 
 	return &Schema{
 		Properties: []Property{

@@ -106,7 +106,7 @@ func (a *Agent) Start() error {
 
 	// Watch for program changes in goroutine
 	go func() {
-		if err := a.Watch(a.Config.ProgDir, a.Config.LoadProgram); err != nil {
+		if err := a.Watch(a.Config.ProgDir, a.Config.LoadService); err != nil {
 			log.Error().Err(err).Msg("failed to watch programs directory")
 		}
 	}()

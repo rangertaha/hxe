@@ -4,21 +4,14 @@
 api {
   addr = "0.0.0.0"
   port = 8080
-  username = "hxe"
-  password = "hxe"
-
-  client {
-    url = "http://localhost:8080"
-    token = "token"
-    username = "username"
-    password = "password"
-  }
+  username = "admin"
+  password = "password"
 }
 
 broker { 
   name = "hxe"
   addr = "0.0.0.0"
-  port = 8080
+  port = 7070
 }
    
 database {

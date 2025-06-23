@@ -23,10 +23,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// SeedPrograms creates placeholder program records
-func SeedPrograms(db *gorm.DB) error {
-	// Base programs that we'll use to generate variations
-	basePrograms := []struct {
+// SeedServices creates placeholder service records
+func SeedServices(db *gorm.DB) error {
+	// Base services that we'll use to generate variations
+	baseServices := []struct {
 		NamePrefix  string
 		Exec        string
 		Description string
@@ -43,16 +43,16 @@ func SeedPrograms(db *gorm.DB) error {
 		{"Backup Verification", "sha256sum /backups/backup_%d.tar", "Verify backup integrity"},
 	}
 
-	var programs []models.Program
+	var services []models.Service
 
-	// Generate 100 programs based on the base programs
+	// Generate 100 services based on the base services
 	for i := 0; i < 100; i++ {
-		baseProgram := basePrograms[i%len(basePrograms)]
+		baseService := baseServices[i%len(baseServices)]
 
-		program := models.Program{
-			Name:        baseProgram.NamePrefix + " " + string('A'+rune(i%26)),
-			Description: baseProgram.Description,
-			Command:     baseProgram.Exec,
+		service := models.Service{
+			Name:        baseService.NamePrefix + " " + string('A'+rune(i%26)),
+			Description: baseService.Description,
+			Command:     baseService.Exec,
 			Args:        "",
 			Directory:   "/tmp",
 			User:        "nobody",
@@ -63,11 +63,11 @@ func SeedPrograms(db *gorm.DB) error {
 			Retries:     i % 5,
 			MaxRetries:  5,
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
 
-	// Add the original program
-	programs = append(programs, models.Program{
+	// Add the original service
+	services = append(services, models.Service{
 		Name:        "Database Backup Original",
 		Description: "Daily backup of production database",
 		Command:     "pg_dump",
@@ -82,14 +82,14 @@ func SeedPrograms(db *gorm.DB) error {
 		MaxRetries:  5,
 	})
 
-	// Create programs only if they don't exist
-	for _, program := range programs {
-		var existingProgram models.Program
-		result := db.Where("name = ?", program.Name).First(&existingProgram)
+	// Create services only if they don't exist
+	for _, service := range services {
+		var existingService models.Service
+		result := db.Where("name = ?", service.Name).First(&existingService)
 		if result.Error != nil {
 			if result.Error == gorm.ErrRecordNotFound {
-				// Program doesn't exist, create it
-				if err := db.Create(&program).Error; err != nil {
+				// Service doesn't exist, create it
+				if err := db.Create(&service).Error; err != nil {
 					return err
 				}
 			} else {

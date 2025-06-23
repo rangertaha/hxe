@@ -2,7 +2,7 @@
 
 HXE - Host eXecution Engine
 
-A host-based process execution and management. 
+A host-based process execution and management for long lived services and and short lived tasks. 
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-GPLv3+-green.svg)](LICENSE)

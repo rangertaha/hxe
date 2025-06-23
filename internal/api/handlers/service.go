@@ -27,66 +27,66 @@ import (
 	"github.com/rangertaha/hxe/internal/models"
 )
 
-type Program struct {
-	Prog *services.Program
+type Service struct {
+	Prog *services.Service
 }
 
-func NewProgram(b internal.Broker) *Program {
-	return &Program{
-		Prog: services.NewProgram(b),
+func NewService(b internal.Broker) *Service {
+	return &Service{
+		Prog: services.NewService(b),
 	}
 }
 
 // CRUD HANDLERS
-func (h *Program) List(c echo.Context) error {
-	programs, err := h.Prog.List()
+func (h *Service) List(c echo.Context) error {
+	services, err := h.Prog.List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, programs)
+	return c.JSON(http.StatusOK, services)
 }
 
-func (h *Program) Get(c echo.Context) error {
-	program, err := h.Prog.Get(c.Param("id"))
+func (h *Service) Get(c echo.Context) error {
+	service, err := h.Prog.Get(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Create(c echo.Context) error {
-	var prog models.Program
+func (h *Service) Create(c echo.Context) error {
+	var prog models.Service
 	if err := c.Bind(&prog); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	program, err := h.Prog.Create(prog)
+	service, err := h.Prog.Create(prog)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Update(c echo.Context) error {
-	var prog models.Program
+func (h *Service) Update(c echo.Context) error {
+	var prog models.Service
 	if err := c.Bind(&prog); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	program, err := h.Prog.Update(c.Param("id"), prog)
+	service, err := h.Prog.Update(c.Param("id"), prog)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Delete(c echo.Context) error {
-	program, err := h.Prog.Delete(c.Param("id"))
+func (h *Service) Delete(c echo.Context) error {
+	service, err := h.Prog.Delete(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Schema(c echo.Context) error {
+func (h *Service) Schema(c echo.Context) error {
 	schema, err := h.Prog.Schema()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -95,75 +95,75 @@ func (h *Program) Schema(c echo.Context) error {
 }
 
 // RUNTIME HANDLERS
-func (h *Program) Start(c echo.Context) error {
-	program, err := h.Prog.Start(c.Param("id"))
+func (h *Service) Start(c echo.Context) error {
+	service, err := h.Prog.Start(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Stop(c echo.Context) error {
-	program, err := h.Prog.Stop(c.Param("id"))
+func (h *Service) Stop(c echo.Context) error {
+	service, err := h.Prog.Stop(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Restart(c echo.Context) error {
-	program, err := h.Prog.Restart(c.Param("id"))
+func (h *Service) Restart(c echo.Context) error {
+	service, err := h.Prog.Restart(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Status(c echo.Context) error {
-	program, err := h.Prog.Status(c.Param("id"))
+func (h *Service) Status(c echo.Context) error {
+	service, err := h.Prog.Status(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Reload(c echo.Context) error {
-	program, err := h.Prog.Reload(c.Param("id"))
+func (h *Service) Reload(c echo.Context) error {
+	service, err := h.Prog.Reload(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Enable(c echo.Context) error {
-	program, err := h.Prog.Enable(c.Param("id"))
+func (h *Service) Enable(c echo.Context) error {
+	service, err := h.Prog.Enable(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Disable(c echo.Context) error {
-	program, err := h.Prog.Disable(c.Param("id"))
+func (h *Service) Disable(c echo.Context) error {
+	service, err := h.Prog.Disable(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
 // STREAM HANDLERS
-func (h *Program) Shell(c echo.Context) error {
-	program, err := h.Prog.Shell(c.Param("id"))
+func (h *Service) Shell(c echo.Context) error {
+	service, err := h.Prog.Shell(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Program) Tail(c echo.Context) error {
-	program, err := h.Prog.Tail(c.Param("id"))
+func (h *Service) Log(c echo.Context) error {
+	service, err := h.Prog.Log(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, program)
+	return c.JSON(http.StatusOK, service)
 }

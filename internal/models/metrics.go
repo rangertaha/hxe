@@ -31,8 +31,8 @@ type Metric struct {
 	Fields    map[string]float64 `json:"fields"`
 }
 
-func (program *Program) AfterSave(tx *gorm.DB) (err error) {
+func (program *Service) AfterSave(tx *gorm.DB) (err error) {
 	// Implement your post-save logic here
-	log.Info().Str("program", program.Name).Str("status", string(program.Status)).Str("command", program.Command).Msgf("Program successfully saved!")
+	log.Info().Str("program", program.Name).Str("status", string(program.Status)).Str("command", program.Command).Msgf("Service successfully saved!")
 	return nil
 }

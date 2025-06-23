@@ -37,18 +37,9 @@ type Client struct {
 	token      string
 	username   string
 	password   string
-	Program    *ProgramClient
+	Service    *ServiceClient
 }
 
-// // NewClient creates a new API client
-// func NewClient(baseURL string) *Client {
-// 	return &Client{
-// 		baseURL: baseURL,
-// 		httpClient: &http.Client{
-// 			Timeout: time.Second * 30,
-// 		},
-// 	}
-// }
 
 // NewAuthenticatedClient creates a new API client with authentication
 func NewClient(baseURL, username, password string) *Client {
@@ -60,7 +51,7 @@ func NewClient(baseURL, username, password string) *Client {
 			Timeout: time.Second * 30,
 		},
 	}
-	c.Program = NewProgramClient(c)
+	c.Service = NewServiceClient(c)
 	return c
 }
 
@@ -182,6 +173,6 @@ func (c *Client) DoRequest(method, path string, body interface{}, v interface{})
 	return nil
 }
 
-// func (c *Client) Program() *ProgramClient {
-// 	return &ProgramClient{c}
+// func (c *Client) Service() *ServiceClient {
+// 	return &ServiceClient{c}
 // }
