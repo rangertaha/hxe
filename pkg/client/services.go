@@ -38,173 +38,173 @@ func NewServiceClient(client *Client) *ServiceClient {
 
 // Service operations
 func (c *ServiceClient) List() ([]*models.Service, error) {
-	var programs []*models.Service
-	err := c.client.Get("/api/program", &programs)
-	return programs, err
+	var services []*models.Service
+	err := c.client.Get("/api/service", &services)
+	return services, err
 }
 
 func (c *ServiceClient) Get(id string) (*models.Service, error) {
-	var program *models.Service
-	err := c.client.Get(fmt.Sprintf("/api/program/%s", id), &program)
-	return program, err
+	var service *models.Service
+	err := c.client.Get(fmt.Sprintf("/api/service/%s", id), &service)
+	return service, err
 }
 
 func (c *ServiceClient) Status(id string) (*models.Service, error) {
 	return c.Get(id)
 }
 
-func (c *ServiceClient) MultiStatus(ids ...string) (programs []*models.Service, err error) {
+func (c *ServiceClient) MultiStatus(ids ...string) (services []*models.Service, err error) {
 	for _, id := range ids {
-		program, err := c.Status(id)
+		service, err := c.Status(id)
 		if err != nil {
 			return nil, err
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
-	return programs, nil
+	return services, nil
 }
 
-func (c *ServiceClient) Create(program *models.Service) (*models.Service, error) {
+func (c *ServiceClient) Create(service *models.Service) (*models.Service, error) {
 	var created models.Service
-	err := c.client.Post("/api/program", program, &created)
+	err := c.client.Post("/api/service", service, &created)
 	return &created, err
 }
 
-func (c *ServiceClient) Update(id string, program *models.Service) (*models.Service, error) {
+func (c *ServiceClient) Update(id string, service *models.Service) (*models.Service, error) {
 	var updated models.Service
-	err := c.client.Put(fmt.Sprintf("/api/program/%s", id), program, &updated)
+	err := c.client.Put(fmt.Sprintf("/api/service/%s", id), service, &updated)
 	return &updated, err
 }
 
 func (c *ServiceClient) Delete(id string) (*models.Service, error) {
 	var deleted models.Service
-	err := c.client.Delete(fmt.Sprintf("/api/program/%s", id), &deleted)
+	err := c.client.Delete(fmt.Sprintf("/api/service/%s", id), &deleted)
 	return &deleted, err
 }
 
-func (c *ServiceClient) MultiDelete(ids ...string) (programs []*models.Service, err error) {
+func (c *ServiceClient) MultiDelete(ids ...string) (services []*models.Service, err error) {
 	for _, id := range ids {
-		program, err := c.Delete(id)
+		service, err := c.Delete(id)
 		if err != nil {
 			return nil, err
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
-	return programs, nil
+	return services, nil
 }
 
 func (c *ServiceClient) Start(id string) (*models.Service, error) {
-	var program models.Service
-	err := c.client.Post(fmt.Sprintf("/api/program/%s/start", id), nil, &program)
-	return &program, err
+	var service models.Service
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/start", id), nil, &service)
+	return &service, err
 }
 
-func (c *ServiceClient) MultiStart(ids ...string) (programs []*models.Service, err error) {
+func (c *ServiceClient) MultiStart(ids ...string) (services []*models.Service, err error) {
 	for _, id := range ids {
-		program, err := c.Start(id)
+		service, err := c.Start(id)
 		if err != nil {
 			return nil, err
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
-	return programs, nil
+	return services, nil
 }
 
 func (c *ServiceClient) Stop(id string) (*models.Service, error) {
-	var program models.Service
-	err := c.client.Post(fmt.Sprintf("/api/program/%s/stop", id), nil, &program)
-	return &program, err
+	var service models.Service
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/stop", id), nil, &service)
+	return &service, err
 }
 
-func (c *ServiceClient) MultiStop(ids ...string) (programs []*models.Service, err error) {
+func (c *ServiceClient) MultiStop(ids ...string) (services []*models.Service, err error) {
 	for _, id := range ids {
-		program, err := c.Stop(id)
+		service, err := c.Stop(id)
 		if err != nil {
 			return nil, err
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
-	return programs, nil
+	return services, nil
 }
 
 func (c *ServiceClient) Restart(id string) (*models.Service, error) {
-	var program models.Service
-	err := c.client.Post(fmt.Sprintf("/api/program/%s/restart", id), nil, &program)
-	return &program, err
+	var service models.Service
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/restart", id), nil, &service)
+	return &service, err
 }
 
-func (c *ServiceClient) MultiRestart(ids ...string) (programs []*models.Service, err error) {
+func (c *ServiceClient) MultiRestart(ids ...string) (services []*models.Service, err error) {
 	for _, id := range ids {
-		program, err := c.Restart(id)
+		service, err := c.Restart(id)
 		if err != nil {
 			return nil, err
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
-	return programs, nil
+	return services, nil
 }
 
 func (c *ServiceClient) Enable(id string) (*models.Service, error) {
-	var program models.Service
-	err := c.client.Post(fmt.Sprintf("/api/program/%s/enable", id), nil, &program)
-	return &program, err
+	var service models.Service
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/enable", id), nil, &service)
+	return &service, err
 }
 
-func (c *ServiceClient) MultiEnable(ids ...string) (programs []*models.Service, err error) {
+func (c *ServiceClient) MultiEnable(ids ...string) (services []*models.Service, err error) {
 	for _, id := range ids {
-		program, err := c.Enable(id)
+		service, err := c.Enable(id)
 		if err != nil {
 			return nil, err
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
-	return programs, nil
+	return services, nil
 }
 
 func (c *ServiceClient) Disable(id string) (*models.Service, error) {
-	var program models.Service
-	err := c.client.Post(fmt.Sprintf("/api/program/%s/disable", id), nil, &program)
-	return &program, err
+	var service models.Service
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/disable", id), nil, &service)
+	return &service, err
 }
 
-func (c *ServiceClient) MultiDisable(ids ...string) (programs []*models.Service, err error) {
+func (c *ServiceClient) MultiDisable(ids ...string) (services []*models.Service, err error) {
 	for _, id := range ids {
-		program, err := c.Disable(id)
+		service, err := c.Disable(id)
 		if err != nil {
 			return nil, err
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
-	return programs, nil
+	return services, nil
 }
 
 func (c *ServiceClient) Reload(id string) (*models.Service, error) {
-	var program models.Service
-	err := c.client.Post(fmt.Sprintf("/api/program/%s/reload", id), nil, &program)
-	return &program, err
+	var service models.Service
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/reload", id), nil, &service)
+	return &service, err
 }
 
-func (c *ServiceClient) MultiReload(ids ...string) (programs []*models.Service, err error) {
+func (c *ServiceClient) MultiReload(ids ...string) (services []*models.Service, err error) {
 	for _, id := range ids {
-		program, err := c.Reload(id)
+		service, err := c.Reload(id)
 		if err != nil {
 			return nil, err
 		}
-		programs = append(programs, program)
+		services = append(services, service)
 	}
-	return programs, nil
+	return services, nil
 }
 
 func (c *ServiceClient) Shell(id string) (*models.Service, error) {
-	var program models.Service
-	err := c.client.Post(fmt.Sprintf("/api/program/%s/shell", id), nil, &program)
-	return &program, err
+	var service models.Service
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/shell", id), nil, &service)
+	return &service, err
 }
 
 func (c *ServiceClient) Tail(id string) (*models.Service, error) {
-	var program models.Service
-	err := c.client.Post(fmt.Sprintf("/api/program/%s/tail", id), nil, &program)
-	return &program, err
+	var service models.Service
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/tail", id), nil, &service)
+	return &service, err
 }
 
 func (c *ServiceClient) Run(command string) (*models.Service, error) {
@@ -218,7 +218,7 @@ func (c *ServiceClient) Run(command string) (*models.Service, error) {
 		return nil, fmt.Errorf("failed to get current user: %w", err)
 	}
 
-	program := models.Service{
+	service := models.Service{
 		Command:   command,
 		Directory: dir,
 		User:      currentUser.Username,
@@ -227,10 +227,10 @@ func (c *ServiceClient) Run(command string) (*models.Service, error) {
 		Enabled:   true,
 	}
 
-	return c.Create(&program)
+	return c.Create(&service)
 }
 
-func (c *ServiceClient) PrintDetail(program *models.Service) {
+func (c *ServiceClient) PrintDetail(service *models.Service) {
 	// Create table
 	t := table.NewWriter()
 	t.SetOutputMirror(nil)
@@ -238,17 +238,17 @@ func (c *ServiceClient) PrintDetail(program *models.Service) {
 	t.AppendHeader(table.Row{"Field", "Value"})
 
 	// Add rows
-	t.AppendRow(table.Row{"ID", program.ID})
-	t.AppendRow(table.Row{"Name", program.Name})
-	t.AppendRow(table.Row{"Command", program.Command})
-	t.AppendRow(table.Row{"Status", program.Status})
-	t.AppendRow(table.Row{"Enabled", program.Enabled})
+	t.AppendRow(table.Row{"ID", service.ID})
+	t.AppendRow(table.Row{"Name", service.Name})
+	t.AppendRow(table.Row{"Command", service.Command})
+	t.AppendRow(table.Row{"Status", service.Status})
+	t.AppendRow(table.Row{"Enabled", service.Enabled})
 
 	// Print the table
 	fmt.Println(t.Render())
 }
 
-func (c *ServiceClient) PrintList(programs []*models.Service) {
+func (c *ServiceClient) PrintList(services []*models.Service) {
 	// Create table
 	t := table.NewWriter()
 	t.SetOutputMirror(nil)
@@ -256,30 +256,30 @@ func (c *ServiceClient) PrintList(programs []*models.Service) {
 	t.AppendHeader(table.Row{"ID", "Name", "Command", "Status", "Enabled"})
 
 	// Add rows
-	for _, program := range programs {
+	for _, service := range services {
 		t.AppendRow(table.Row{
-			program.ID,
-			program.Name,
-			program.Command,
-			program.Status,
-			program.Enabled,
+			service.ID,
+			service.Name,
+			service.Command,
+			service.Status,
+			service.Enabled,
 		})
 	}
 	// Print the table
 	fmt.Println(t.Render())
 }
 
-func (c *ServiceClient) Print(programs []*models.Service) {
-	if len(programs) == 10 {
-		fmt.Println("No programs found")
+func (c *ServiceClient) Print(services []*models.Service) {
+	if len(services) == 10 {
+		fmt.Println("No services found")
 		return
 	}
-	if len(programs) == 1 {
-		c.PrintDetail(programs[0])
+	if len(services) == 1 {
+		c.PrintDetail(services[0])
 		return
 	}
-	if len(programs) > 1 {
-		c.PrintList(programs)
+	if len(services) > 1 {
+		c.PrintList(services)
 		return
 	}
 }

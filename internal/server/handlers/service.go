@@ -23,23 +23,23 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rangertaha/hxe/internal"
-	"github.com/rangertaha/hxe/internal/api/services"
+	"github.com/rangertaha/hxe/internal/server/services"
 	"github.com/rangertaha/hxe/internal/models"
 )
 
 type Service struct {
-	Prog *services.Service
+	Svc *services.Service
 }
 
 func NewService(b internal.Broker) *Service {
 	return &Service{
-		Prog: services.NewService(b),
+		Svc: services.NewService(b),
 	}
 }
 
 // CRUD HANDLERS
 func (h *Service) List(c echo.Context) error {
-	services, err := h.Prog.List()
+	services, err := h.Svc.List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -47,7 +47,7 @@ func (h *Service) List(c echo.Context) error {
 }
 
 func (h *Service) Get(c echo.Context) error {
-	service, err := h.Prog.Get(c.Param("id"))
+	service, err := h.Svc.Get(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -59,7 +59,7 @@ func (h *Service) Create(c echo.Context) error {
 	if err := c.Bind(&prog); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	service, err := h.Prog.Create(prog)
+	service, err := h.Svc.Create(prog)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -71,7 +71,7 @@ func (h *Service) Update(c echo.Context) error {
 	if err := c.Bind(&prog); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	service, err := h.Prog.Update(c.Param("id"), prog)
+	service, err := h.Svc.Update(c.Param("id"), prog)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -79,7 +79,7 @@ func (h *Service) Update(c echo.Context) error {
 }
 
 func (h *Service) Delete(c echo.Context) error {
-	service, err := h.Prog.Delete(c.Param("id"))
+	service, err := h.Svc.Delete(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -87,7 +87,7 @@ func (h *Service) Delete(c echo.Context) error {
 }
 
 func (h *Service) Schema(c echo.Context) error {
-	schema, err := h.Prog.Schema()
+	schema, err := h.Svc.Schema()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -96,7 +96,7 @@ func (h *Service) Schema(c echo.Context) error {
 
 // RUNTIME HANDLERS
 func (h *Service) Start(c echo.Context) error {
-	service, err := h.Prog.Start(c.Param("id"))
+	service, err := h.Svc.Start(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -104,7 +104,7 @@ func (h *Service) Start(c echo.Context) error {
 }
 
 func (h *Service) Stop(c echo.Context) error {
-	service, err := h.Prog.Stop(c.Param("id"))
+	service, err := h.Svc.Stop(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -112,7 +112,7 @@ func (h *Service) Stop(c echo.Context) error {
 }
 
 func (h *Service) Restart(c echo.Context) error {
-	service, err := h.Prog.Restart(c.Param("id"))
+	service, err := h.Svc.Restart(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -120,7 +120,7 @@ func (h *Service) Restart(c echo.Context) error {
 }
 
 func (h *Service) Status(c echo.Context) error {
-	service, err := h.Prog.Status(c.Param("id"))
+	service, err := h.Svc.Status(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -128,7 +128,7 @@ func (h *Service) Status(c echo.Context) error {
 }
 
 func (h *Service) Reload(c echo.Context) error {
-	service, err := h.Prog.Reload(c.Param("id"))
+	service, err := h.Svc.Reload(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -136,7 +136,7 @@ func (h *Service) Reload(c echo.Context) error {
 }
 
 func (h *Service) Enable(c echo.Context) error {
-	service, err := h.Prog.Enable(c.Param("id"))
+	service, err := h.Svc.Enable(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -144,7 +144,7 @@ func (h *Service) Enable(c echo.Context) error {
 }
 
 func (h *Service) Disable(c echo.Context) error {
-	service, err := h.Prog.Disable(c.Param("id"))
+	service, err := h.Svc.Disable(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -153,7 +153,7 @@ func (h *Service) Disable(c echo.Context) error {
 
 // STREAM HANDLERS
 func (h *Service) Shell(c echo.Context) error {
-	service, err := h.Prog.Shell(c.Param("id"))
+	service, err := h.Svc.Shell(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -161,7 +161,7 @@ func (h *Service) Shell(c echo.Context) error {
 }
 
 func (h *Service) Log(c echo.Context) error {
-	service, err := h.Prog.Log(c.Param("id"))
+	service, err := h.Svc.Log(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

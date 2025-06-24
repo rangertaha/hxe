@@ -40,9 +40,11 @@ type Client struct {
 	Service    *ServiceClient
 }
 
-
 // NewAuthenticatedClient creates a new API client with authentication
 func NewClient(baseURL, username, password string) *Client {
+	if baseURL == "" {
+		baseURL = DefaultBaseURL
+	}
 	c := &Client{
 		baseURL:  baseURL,
 		username: username,

@@ -68,8 +68,13 @@ type (
 		Database Database `hcl:"database,block"`
 		Broker   Broker   `hcl:"broker,block"`
 		API      API      `hcl:"api,block"`
+		Log      Log      `hcl:"log,block"`
 
 		ConfigFile string
+	}
+	Log struct {
+		Level  string `hcl:"level,optional"`
+		Format string `hcl:"format,optional"`
 	}
 	API struct {
 		Host     string `hcl:"addr,optional"`

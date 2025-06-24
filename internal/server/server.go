@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package api
+package server
 
 import (
 	"net/http"
@@ -27,7 +27,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rangertaha/hxe/internal"
-	"github.com/rangertaha/hxe/internal/api/handlers"
+	"github.com/rangertaha/hxe/internal/server/handlers"
 )
 
 var jwtSecret = []byte("your-secret-key") // In production, use environment variable
@@ -147,26 +147,27 @@ func New(b internal.Broker) *echo.Echo {
 
 	// Services
 	// Initialize CRUD handlers
-	proc := handlers.NewService(b)
-	api.GET("/service", proc.List)
-	api.GET("/service/:id", proc.Get)
-	api.POST("/service", proc.Create)
-	api.PUT("/service/:id", proc.Update)
-	api.DELETE("/service/:id", proc.Delete)
-	api.OPTIONS("/service", proc.Schema)
+	svc := e.Group("/service")
+	service := handlers.NewService(b)
+	svc.GET("", service.List)
+	svc.GET("/:id", service.Get)
+	svc.POST("", service.Create)
+	svc.PUT("/:id", service.Update)
+	svc.DELETE("/:id", service.Delete)
+	svc.OPTIONS("", service.Schema)
 
 	// Runtime handlers
-	api.POST("/service/:id/start", proc.Start)
-	api.POST("/service/:id/stop", proc.Stop)
-	api.POST("/service/:id/restart", proc.Restart)
-	api.POST("/service/:id/status", proc.Status)
-	api.POST("/service/:id/reload", proc.Reload)
-	api.POST("/service/:id/enable", proc.Enable)
-	api.POST("/service/:id/disable", proc.Disable)
+	svc.POST("/:id/start", service.Start)
+	svc.POST("/:id/stop", service.Stop)
+	svc.POST("/:id/restart", service.Restart)
+	svc.POST("/:id/status", service.Status)
+	svc.POST("/:id/reload", service.Reload)
+	svc.POST("/:id/enable", service.Enable)
+	svc.POST("/:id/disable", service.Disable)
 
 	// Stream handlers
-	api.POST("/service/:id/shell", proc.Shell)
-	api.POST("/service/:id/log", proc.Log)
+	svc.POST("/:id/shell", service.Shell)
+	svc.POST("/:id/log", service.Log)
 
 	return e
 }

@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/rangertaha/hxe/internal"
-	"github.com/rangertaha/hxe/internal/config"
 	"github.com/rangertaha/hxe/pkg/client"
 	"github.com/urfave/cli/v3"
 )
@@ -39,19 +38,19 @@ var serviceCmd *cli.Command = &cli.Command{
 	EnableShellCompletion: true,
 	Suggest:               true,
 
-	Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-		// Load configuration file
-		cfgFile := cmd.String("config")
-		cliOptions := config.CliOptions(ctx, cmd)
-		fileOptions := config.FileOption(cfgFile)
+	// Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+	// 	// Load configuration file
+	// 	cfgFile := cmd.String("config")
+	// 	cliOptions := config.CliOptions(ctx, cmd)
+	// 	fileOptions := config.FileOption(cfgFile)
 
-		// Create new config
-		if CfgOption, err = config.New(fileOptions, cliOptions); err != nil {
-			return ctx, err
-		}
+	// 	// Create new config
+	// 	if CfgOption, err = config.New(fileOptions, cliOptions); err != nil {
+	// 		return ctx, err
+	// 	}
 
-		return ctx, nil
-	},
+	// 	return ctx, nil
+	// },
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		cli.ShowAppHelpAndExit(cmd, 1)
 		return nil
@@ -64,7 +63,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Description: `Run a service. If no service name is provided, 
 				executes the command directly.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -103,7 +102,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Start a service",
 			Description: `Start a service by name.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -121,7 +120,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Stop a service",
 			Description: `Stop a service by name.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -139,7 +138,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Restart a service",
 			Description: `Restart a service by name.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -157,7 +156,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Show service status",
 			Description: `Show the status of a specific service or all services.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -175,7 +174,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Reload configuration",
 			Description: `Reload the configuration without restarting services.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -194,7 +193,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Enable a service",
 			Description: `Enable a service to start automatically.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -214,7 +213,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Disable a service",
 			Description: `Disable a service from starting automatically.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -233,7 +232,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Delete registered service by ID",
 			Description: `Delete a registered service by ID.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -266,7 +265,7 @@ var serviceCmd *cli.Command = &cli.Command{
 				},
 			},
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}
@@ -285,7 +284,7 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Open shell for a service",
 			Description: `Open an interactive shell in the context of a service.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
 					return err
 				}

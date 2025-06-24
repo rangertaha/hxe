@@ -22,9 +22,9 @@ import (
 	"fmt"
 
 	"github.com/labstack/echo/v4"
-	"github.com/rangertaha/hxe/internal/api"
 	"github.com/rangertaha/hxe/internal/config"
 	"github.com/rangertaha/hxe/internal/log"
+	"github.com/rangertaha/hxe/internal/server"
 	"github.com/rs/zerolog"
 )
 
@@ -40,7 +40,7 @@ func NewAPIServer(a *Agent) (*APIServer, error) {
 	svc := &APIServer{
 		config: a.Config.API,
 		log:    log.With().Logger(),
-		router: api.New(a.Broker),
+		router: server.New(a.Broker),
 	}
 
 	if err := svc.Init(); err != nil {

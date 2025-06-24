@@ -87,7 +87,7 @@ func (b *Broker) Start() error {
 	b.log.Info().Msg("starting messaging broker")
 
 	// // Subscribe to ares subject
-	// if err := m.Subscribe("ares", m.handleMessage); err != nil {
+	// if err := b.Subscribe("ares", b.handleMessage); err != nil {
 	// 	return fmt.Errorf("failed to subscribe to ares: %w", err)
 	// }
 	return nil
