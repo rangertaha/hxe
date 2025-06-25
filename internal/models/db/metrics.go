@@ -16,23 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package models
+package db
 
-import (
-	"github.com/rangertaha/hxe/internal/log"
+// import (
+// 	"github.com/rangertaha/hxe/internal/log"
 
-	"gorm.io/gorm"
-)
+// 	"gorm.io/gorm"
+// )
 
-type Metric struct {
-	ID        uint               `gorm:"primaryKey" json:"id"`
-	Timestamp int64              `json:"timestamp"`
-	Tags      map[string]string  `json:"tags"`
-	Fields    map[string]float64 `json:"fields"`
-}
+// type Metric struct {
+// 	ID        uint               `gorm:"primaryKey" json:"id"`
+// 	Timestamp int64              `json:"timestamp"`
+// 	Tags      map[string]string  `json:"tags"`
+// 	Fields    map[string]float64 `json:"fields"`
+// }
 
-func (program *Service) AfterSave(tx *gorm.DB) (err error) {
-	// Implement your post-save logic here
-	log.Info().Str("program", program.Name).Str("status", string(program.Status)).Str("command", program.Command).Msgf("Service successfully saved!")
-	return nil
-}
+// func (program *Service) AfterSave(tx *gorm.DB) (err error) {
+// 	// Implement your post-save logic here
+// 	log.Info().Str("program", program.Name).Str("status", string(program.Status)).Str("command", program.Command).Msgf("Service successfully saved!")
+// 	return nil
+// }

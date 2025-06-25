@@ -3,12 +3,13 @@ package services
 import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/micro"
+	"github.com/rangertaha/hxe/internal/api/handlers"
 )
 
 type API struct {
 	srv micro.Service
-	svc *Service
-	tsk *Task
+	svc *handlers.Service
+	tsk *handlers.Task
 }
 
 func NewAPI(nc *nats.Conn) (e *API, err error) {
@@ -22,8 +23,8 @@ func NewAPI(nc *nats.Conn) (e *API, err error) {
 	}
 	e = &API{
 		srv: srv,
-		svc: NewService(srv.AddGroup("svc")),
-		tsk: NewTask(srv.AddGroup("tsk")),
+		svc: handlers.NewService(srv.AddGroup("svc")),
+		tsk: handlers.NewTask(srv.AddGroup("tsk")),
 	}
 	err = e.Init()
 	return
