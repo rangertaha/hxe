@@ -145,16 +145,23 @@ func New(b internal.Broker) *echo.Echo {
 	api.POST("/auth/refresh", authHandler.Refresh)
 	api.POST("/auth/logout", authHandler.Logout)
 
+	// Routes
+	ServiceRoutes(e, b)
+	CategoryRoutes(e, b)
+
+	return e
+}
+
+func ServiceRoutes(e *echo.Echo, b internal.Broker) {
 	// Services
-	// Initialize CRUD handlers
-	svc := e.Group("/service")
 	service := handlers.NewService(b)
+	svc := e.Group("/service")
 	svc.GET("", service.List)
 	svc.GET("/:id", service.Get)
 	svc.POST("", service.Create)
 	svc.PUT("/:id", service.Update)
 	svc.DELETE("/:id", service.Delete)
-	svc.OPTIONS("", service.Schema)
+	// svc.OPTIONS("", service.Schema)
 
 	// Runtime handlers
 	svc.POST("/:id/start", service.Start)
@@ -168,6 +175,14 @@ func New(b internal.Broker) *echo.Echo {
 	// Stream handlers
 	svc.POST("/:id/shell", service.Shell)
 	svc.POST("/:id/log", service.Log)
+}
 
-	return e
+func CategoryRoutes(e *echo.Echo, b internal.Broker) {
+	category := handlers.NewCategory(b)
+	cat := e.Group("/category")
+	cat.GET("", category.List)
+	cat.GET("/:id", category.Get)
+	cat.POST("", category.Create)
+	cat.PUT("/:id", category.Update)
+	cat.DELETE("/:id", category.Delete)
 }

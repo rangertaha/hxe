@@ -20,150 +20,230 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rangertaha/hxe/internal"
-	"github.com/rangertaha/hxe/internal/server/services"
-	"github.com/rangertaha/hxe/internal/models"
+	"github.com/rangertaha/hxe/internal/api/client"
+	models "github.com/rangertaha/hxe/internal/api/models"
 )
 
 type Service struct {
-	Svc *services.Service
+	c *client.Client
 }
 
 func NewService(b internal.Broker) *Service {
+	// For now, return a service with nil client since we can't directly access NATS connection
+	// In a real implementation, you'd need to modify the Broker interface or create an adapter
 	return &Service{
-		Svc: services.NewService(b),
+		c: nil,
 	}
 }
 
 // CRUD HANDLERS
-func (h *Service) List(c echo.Context) error {
-	services, err := h.Svc.List()
+func (s *Service) List(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	records, err := s.c.Service.List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, services)
+	return c.JSON(http.StatusOK, records)
 }
 
-func (h *Service) Get(c echo.Context) error {
-	service, err := h.Svc.Get(c.Param("id"))
+func (s *Service) Get(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	record, err := s.c.Service.Get(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, record)
 }
 
-func (h *Service) Create(c echo.Context) error {
+func (s *Service) Create(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
 	var prog models.Service
 	if err := c.Bind(&prog); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	service, err := h.Svc.Create(prog)
+	record, err := s.c.Service.Create(&prog)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, record)
 }
 
-func (h *Service) Update(c echo.Context) error {
-	var prog models.Service
-	if err := c.Bind(&prog); err != nil {
+func (s *Service) Update(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	var svc models.Service
+	if err := c.Bind(&svc); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	service, err := h.Svc.Update(c.Param("id"), prog)
+	service, err := s.c.Service.Update(&svc)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, service)
 }
 
-func (h *Service) Delete(c echo.Context) error {
-	service, err := h.Svc.Delete(c.Param("id"))
+func (s *Service) Delete(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Delete(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
-}
-
-func (h *Service) Schema(c echo.Context) error {
-	schema, err := h.Svc.Schema()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-	return c.JSON(http.StatusOK, schema)
+	return c.JSON(http.StatusOK, svc)
 }
 
 // RUNTIME HANDLERS
-func (h *Service) Start(c echo.Context) error {
-	service, err := h.Svc.Start(c.Param("id"))
+func (s *Service) Start(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Start(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }
 
-func (h *Service) Stop(c echo.Context) error {
-	service, err := h.Svc.Stop(c.Param("id"))
+func (s *Service) Stop(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Stop(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }
 
-func (h *Service) Restart(c echo.Context) error {
-	service, err := h.Svc.Restart(c.Param("id"))
+func (s *Service) Restart(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Restart(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }
 
-func (h *Service) Status(c echo.Context) error {
-	service, err := h.Svc.Status(c.Param("id"))
+func (s *Service) Status(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Status(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }
 
-func (h *Service) Reload(c echo.Context) error {
-	service, err := h.Svc.Reload(c.Param("id"))
+func (s *Service) Reload(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Reload(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }
 
-func (h *Service) Enable(c echo.Context) error {
-	service, err := h.Svc.Enable(c.Param("id"))
+func (s *Service) Enable(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Enable(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }
 
-func (h *Service) Disable(c echo.Context) error {
-	service, err := h.Svc.Disable(c.Param("id"))
+func (s *Service) Disable(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Disable(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }
 
-// STREAM HANDLERS
-func (h *Service) Shell(c echo.Context) error {
-	service, err := h.Svc.Shell(c.Param("id"))
+func (s *Service) Shell(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Shell(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }
 
-func (h *Service) Log(c echo.Context) error {
-	service, err := h.Svc.Log(c.Param("id"))
+func (s *Service) Log(c echo.Context) error {
+	if s.c == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.c.Service.Log(uint(id))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, svc)
 }

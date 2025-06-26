@@ -23,7 +23,8 @@ import (
 	"strconv"
 
 	"github.com/rangertaha/hxe/internal"
-	"github.com/rangertaha/hxe/internal/models"
+	"github.com/rangertaha/hxe/internal/models/db"
+	pb "github.com/rangertaha/hxe/internal/models/pb"
 	"gorm.io/gorm"
 )
 
@@ -34,29 +35,29 @@ type Service struct {
 
 func NewService(b internal.Broker) *Service {
 	return &Service{
-		db:     models.DB,
+		db:     db.DB,
 		broker: b,
 	}
 }
 
 // List returns all services
-func (p *Service) List() ([]models.Service, error) {
-	var services []models.Service
-	if err := p.db.Find(&services).Error; err != nil {
+func (p *Service) List() ([]pb.Service, error) {
+	var svcs []db.Service
+	if err := p.db.Find(&svcs).Error; err != nil {
 		return nil, fmt.Errorf("failed to list services: %w", err)
 	}
-	return services, nil
+	return models.ToPb(svcs...), nil
 }
 
 // Get returns a service by ID
-func (p *Service) Get(id string) (*models.Service, error) {
-	var service models.Service
+func (p *Service) Get(id string) (*pb.Service, error) {
+	var service pb.Service
 	serviceID, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
 		return nil, fmt.Errorf("invalid service ID: %w", err)
 	}
 
-	if err := p.db.First(&service, serviceID).Error; err != nil {
+	if err := p.pb.First(&service, serviceID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("service not found")
 		}
@@ -67,7 +68,7 @@ func (p *Service) Get(id string) (*models.Service, error) {
 }
 
 // Create creates a new service
-func (p *Service) Create(service models.Service) (*models.Service, error) {
+func (p *Service) Create(service *pb.Service) (*pb.Service, error) {
 	if err := p.db.Create(&service).Error; err != nil {
 		return nil, fmt.Errorf("failed to create service: %w", err)
 	}
@@ -75,7 +76,7 @@ func (p *Service) Create(service models.Service) (*models.Service, error) {
 }
 
 // Update updates a service
-func (p *Service) Update(id string, updates models.Service) (*models.Service, error) {
+func (p *Service) Update(id string, updates *pb.Service) (*pb.Service, error) {
 	if err := p.db.Save(&updates).Error; err != nil {
 		return nil, fmt.Errorf("failed to update service: %w", err)
 	}
@@ -83,7 +84,7 @@ func (p *Service) Update(id string, updates models.Service) (*models.Service, er
 }
 
 // Delete deletes a service
-func (p *Service) Delete(id string) (*models.Service, error) {
+func (p *Service) Delete(id string) (*pb.Service, error) {
 	deleted, err := p.Stop(id)
 	if err != nil {
 		return nil, err
@@ -97,19 +98,19 @@ func (p *Service) Delete(id string) (*models.Service, error) {
 }
 
 // Schema returns the schema of a service
-func (p *Service) Schema() (*models.Schema, error) {
-	return models.ServiceSchema(), nil
+func (p *Service) Schema() (*pb.Schema, error) {
+	return pb.ServiceSchema(), nil
 }
 
 // Start starts a service
-func (p *Service) Start(id string) (*models.Service, error) {
+func (p *Service) Start(id string) (*pb.Service, error) {
 	service, err := p.Get(id)
 	if err != nil {
 		return nil, err
 	}
 
 	// Update status to started
-	service.Status = models.ServiceStart
+	service.Status = pb.ServiceStatus_STARTED
 
 	if err := p.db.Save(service).Error; err != nil {
 		return nil, fmt.Errorf("failed to start service: %w", err)
@@ -119,14 +120,14 @@ func (p *Service) Start(id string) (*models.Service, error) {
 }
 
 // Stop stops a service
-func (p *Service) Stop(id string) (*models.Service, error) {
+func (p *Service) Stop(id string) (*pb.Service, error) {
 	service, err := p.Get(id)
 	if err != nil {
 		return nil, err
 	}
 
 	// Update status to stopped
-	service.Status = models.ServiceStop
+	service.Status = pb.ServiceStatus_STOPPED
 
 	if err := p.db.Save(service).Error; err != nil {
 		return nil, fmt.Errorf("failed to stop service: %w", err)
@@ -136,7 +137,7 @@ func (p *Service) Stop(id string) (*models.Service, error) {
 }
 
 // Restart restarts a service
-func (p *Service) Restart(id string) (*models.Service, error) {
+func (p *Service) Restart(id string) (*pb.Service, error) {
 	// Stop the service first
 	if _, err := p.Stop(id); err != nil {
 		return nil, err
@@ -147,7 +148,7 @@ func (p *Service) Restart(id string) (*models.Service, error) {
 }
 
 // Status returns the status of a service
-func (p *Service) Status(id string) (*models.Service, error) {
+func (p *Service) Status(id string) (*pb.Service, error) {
 	service, err := p.Get(id)
 	if err != nil {
 		return nil, err
@@ -157,29 +158,29 @@ func (p *Service) Status(id string) (*models.Service, error) {
 }
 
 // Reload reloads the configuration for a service
-func (p *Service) Reload(id string) (*models.Service, error) {
+func (p *Service) Reload(id string) (*pb.Service, error) {
 	service, err := p.Get(id)
 	if err != nil {
 		return nil, err
 	}
 
-	service.Status = models.ServiceReload
+	service.Status = pb.ServiceStatus_RELOADED
 
-	if err := p.db.Save(service).Error; err != nil {
+	if err := p.pb.Save(service).Error; err != nil {
 		return nil, fmt.Errorf("failed to reload service: %w", err)
 	}
 	return service, nil
 }
 
 // Enable enables a service to start automatically
-func (p *Service) Enable(id string) (*models.Service, error) {
+func (p *Service) Enable(id string) (*pb.Service, error) {
 	service, err := p.Get(id)
 	if err != nil {
 		return nil, err
 	}
 
 	service.Enabled = true
-	if err := p.db.Save(service).Error; err != nil {
+	if err := p.pb.Save(service).Error; err != nil {
 		return nil, fmt.Errorf("failed to enable service: %w", err)
 	}
 
@@ -187,15 +188,15 @@ func (p *Service) Enable(id string) (*models.Service, error) {
 }
 
 // Disable disables a service from starting automatically
-func (p *Service) Disable(id string) (*models.Service, error) {
+func (p *Service) Disable(id string) (*pb.Service, error) {
 	service, err := p.Get(id)
 	if err != nil {
 		return nil, err
 	}
 
 	service.Enabled = false
-	service.Status = models.ServiceStop
-	if err := p.db.Save(service).Error; err != nil {
+	service.Status = pb.ServiceStop
+	if err := p.pb.Save(service).Error; err != nil {
 		return nil, fmt.Errorf("failed to disable service: %w", err)
 	}
 
@@ -203,7 +204,7 @@ func (p *Service) Disable(id string) (*models.Service, error) {
 }
 
 // Tail follows the logs of a service
-func (p *Service) Log(id string) (*models.Service, error) {
+func (p *Service) Log(id string) (*pb.Service, error) {
 	service, err := p.Get(id)
 	if err != nil {
 		return nil, err
@@ -215,7 +216,7 @@ func (p *Service) Log(id string) (*models.Service, error) {
 }
 
 // Shell opens an interactive shell for a service
-func (p *Service) Shell(id string) (*models.Service, error) {
+func (p *Service) Shell(id string) (*pb.Service, error) {
 	service, err := p.Get(id)
 	if err != nil {
 		return nil, err
