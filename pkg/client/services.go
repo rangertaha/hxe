@@ -21,26 +21,33 @@ package client
 import (
 	"fmt"
 	"os"
-	"os/user"
 
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/rangertaha/hxe/internal/models"
+	"github.com/rangertaha/hxe/internal/log"
+	"github.com/rangertaha/hxe/internal/modules/services/models"
+	"github.com/rangertaha/hxe/internal/rdb"
+	"github.com/rs/zerolog"
 )
 
 type ServiceClient struct {
 	client *Client
-	schema *models.Schema
+	schema *rdb.Schema
+	log    zerolog.Logger
 }
 
 func NewServiceClient(client *Client) *ServiceClient {
-	return &ServiceClient{client: client, schema: models.ServiceSchema()}
+	return &ServiceClient{client: client, schema: rdb.ServiceSchema(), log: log.With().Logger()}
 }
 
 // Service operations
-func (c *ServiceClient) List() ([]*models.Service, error) {
-	var services []*models.Service
+func (c *ServiceClient) List() (*models.Services, error) {
+	var services *models.Services
 	err := c.client.Get("/api/service", &services)
-	return services, err
+	if err != nil {
+		c.log.Error().Err(err).Msg("failed to list services")
+		return nil, err
+	}
+	return services, nil
 }
 
 func (c *ServiceClient) Get(id string) (*models.Service, error) {
@@ -53,13 +60,13 @@ func (c *ServiceClient) Status(id string) (*models.Service, error) {
 	return c.Get(id)
 }
 
-func (c *ServiceClient) MultiStatus(ids ...string) (services []*models.Service, err error) {
+func (c *ServiceClient) MultiStatus(ids ...string) (services *models.Services, err error) {
 	for _, id := range ids {
 		service, err := c.Status(id)
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, service)
+		services.Services = append(services.Services, service)
 	}
 	return services, nil
 }
@@ -82,13 +89,13 @@ func (c *ServiceClient) Delete(id string) (*models.Service, error) {
 	return &deleted, err
 }
 
-func (c *ServiceClient) MultiDelete(ids ...string) (services []*models.Service, err error) {
+func (c *ServiceClient) MultiDelete(ids ...string) (services *models.Services, err error) {
 	for _, id := range ids {
 		service, err := c.Delete(id)
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, service)
+		services.Services = append(services.Services, service)
 	}
 	return services, nil
 }
@@ -99,13 +106,13 @@ func (c *ServiceClient) Start(id string) (*models.Service, error) {
 	return &service, err
 }
 
-func (c *ServiceClient) MultiStart(ids ...string) (services []*models.Service, err error) {
+func (c *ServiceClient) MultiStart(ids ...string) (services *models.Services, err error) {
 	for _, id := range ids {
 		service, err := c.Start(id)
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, service)
+		services.Services = append(services.Services, service)
 	}
 	return services, nil
 }
@@ -116,13 +123,13 @@ func (c *ServiceClient) Stop(id string) (*models.Service, error) {
 	return &service, err
 }
 
-func (c *ServiceClient) MultiStop(ids ...string) (services []*models.Service, err error) {
+func (c *ServiceClient) MultiStop(ids ...string) (services *models.Services, err error) {
 	for _, id := range ids {
 		service, err := c.Stop(id)
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, service)
+		services.Services = append(services.Services, service)
 	}
 	return services, nil
 }
@@ -133,13 +140,13 @@ func (c *ServiceClient) Restart(id string) (*models.Service, error) {
 	return &service, err
 }
 
-func (c *ServiceClient) MultiRestart(ids ...string) (services []*models.Service, err error) {
+func (c *ServiceClient) MultiRestart(ids ...string) (services *models.Services, err error) {
 	for _, id := range ids {
 		service, err := c.Restart(id)
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, service)
+		services.Services = append(services.Services, service)
 	}
 	return services, nil
 }
@@ -150,13 +157,13 @@ func (c *ServiceClient) Enable(id string) (*models.Service, error) {
 	return &service, err
 }
 
-func (c *ServiceClient) MultiEnable(ids ...string) (services []*models.Service, err error) {
+func (c *ServiceClient) MultiEnable(ids ...string) (services *models.Services, err error) {
 	for _, id := range ids {
 		service, err := c.Enable(id)
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, service)
+		services.Services = append(services.Services, service)
 	}
 	return services, nil
 }
@@ -167,13 +174,13 @@ func (c *ServiceClient) Disable(id string) (*models.Service, error) {
 	return &service, err
 }
 
-func (c *ServiceClient) MultiDisable(ids ...string) (services []*models.Service, err error) {
+func (c *ServiceClient) MultiDisable(ids ...string) (services *models.Services, err error) {
 	for _, id := range ids {
 		service, err := c.Disable(id)
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, service)
+		services.Services = append(services.Services, service)
 	}
 	return services, nil
 }
@@ -184,13 +191,13 @@ func (c *ServiceClient) Reload(id string) (*models.Service, error) {
 	return &service, err
 }
 
-func (c *ServiceClient) MultiReload(ids ...string) (services []*models.Service, err error) {
+func (c *ServiceClient) MultiReload(ids ...string) (services *models.Services, err error) {
 	for _, id := range ids {
 		service, err := c.Reload(id)
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, service)
+		services.Services = append(services.Services, service)
 	}
 	return services, nil
 }
@@ -201,9 +208,9 @@ func (c *ServiceClient) Shell(id string) (*models.Service, error) {
 	return &service, err
 }
 
-func (c *ServiceClient) Tail(id string) (*models.Service, error) {
+func (c *ServiceClient) Log(id string) (*models.Service, error) {
 	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/tail", id), nil, &service)
+	err := c.client.Post(fmt.Sprintf("/api/service/%s/log", id), nil, &service)
 	return &service, err
 }
 
@@ -213,17 +220,12 @@ func (c *ServiceClient) Run(command string) (*models.Service, error) {
 		dir = "/tmp"
 	}
 
-	currentUser, err := user.Current()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get current user: %w", err)
-	}
-
 	service := models.Service{
-		Command:   command,
+		CmdExec:   command,
 		Directory: dir,
-		User:      currentUser.Username,
-		Group:     currentUser.Gid,
-		Status:    models.ServiceStart,
+		User:      "root",
+		Group:     "root",
+		Status:    models.ServiceStatus_STARTING,
 		Enabled:   true,
 	}
 
@@ -238,9 +240,9 @@ func (c *ServiceClient) PrintDetail(service *models.Service) {
 	t.AppendHeader(table.Row{"Field", "Value"})
 
 	// Add rows
-	t.AppendRow(table.Row{"ID", service.ID})
+	t.AppendRow(table.Row{"ID", service.Id})
 	t.AppendRow(table.Row{"Name", service.Name})
-	t.AppendRow(table.Row{"Command", service.Command})
+	t.AppendRow(table.Row{"Command", service.CmdExec})
 	t.AppendRow(table.Row{"Status", service.Status})
 	t.AppendRow(table.Row{"Enabled", service.Enabled})
 
@@ -248,7 +250,7 @@ func (c *ServiceClient) PrintDetail(service *models.Service) {
 	fmt.Println(t.Render())
 }
 
-func (c *ServiceClient) PrintList(services []*models.Service) {
+func (c *ServiceClient) PrintList(services *models.Services) {
 	// Create table
 	t := table.NewWriter()
 	t.SetOutputMirror(nil)
@@ -256,11 +258,11 @@ func (c *ServiceClient) PrintList(services []*models.Service) {
 	t.AppendHeader(table.Row{"ID", "Name", "Command", "Status", "Enabled"})
 
 	// Add rows
-	for _, service := range services {
+	for _, service := range services.Services {
 		t.AppendRow(table.Row{
-			service.ID,
+			service.Id,
 			service.Name,
-			service.Command,
+			service.CmdExec,
 			service.Status,
 			service.Enabled,
 		})
@@ -269,16 +271,16 @@ func (c *ServiceClient) PrintList(services []*models.Service) {
 	fmt.Println(t.Render())
 }
 
-func (c *ServiceClient) Print(services []*models.Service) {
-	if len(services) == 10 {
+func (c *ServiceClient) Print(services *models.Services) {
+	if len(services.Services) == 0 {
 		fmt.Println("No services found")
 		return
 	}
-	if len(services) == 1 {
-		c.PrintDetail(services[0])
+	if len(services.Services) == 1 {
+		c.PrintDetail(services.Services[0])
 		return
 	}
-	if len(services) > 1 {
+	if len(services.Services) > 1 {
 		c.PrintList(services)
 		return
 	}

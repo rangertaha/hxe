@@ -30,6 +30,7 @@ import (
 
 var serviceCmd *cli.Command = &cli.Command{
 	Name:                  "service",
+	Aliases:               []string{"s", "svc"},
 	Usage:                 "Hxe service management",
 	Description:           `Hxe service management`,
 	Version:               internal.VERSION,
@@ -52,7 +53,7 @@ var serviceCmd *cli.Command = &cli.Command{
 	// 	return ctx, nil
 	// },
 	Action: func(ctx context.Context, cmd *cli.Command) error {
-		cli.ShowAppHelpAndExit(cmd, 1)
+		cli.ShowSubcommandHelpAndExit(cmd, 1)
 		return nil
 	},
 	Commands: []*cli.Command{
@@ -83,14 +84,14 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "List all services",
 			Description: `List all services with their current status.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(CfgOption.API.URL, username, password)
+				hxeClient := client.NewClient(serverURL, username, password)
 				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
+					return fmt.Errorf("failed to login: %w", err)
 				}
 
 				services, err := hxeClient.Service.List()
 				if err != nil {
-					return fmt.Errorf("failed to run command: %w", err)
+					return fmt.Errorf("failed to list services: %w", err)
 				}
 
 				hxeClient.Service.Print(services)
@@ -247,9 +248,9 @@ var serviceCmd *cli.Command = &cli.Command{
 			},
 		},
 		{
-			Name:        "tail",
-			Usage:       "Tail service logs",
-			Description: `Follow the logs of a service in real-time.`,
+			Name:        "log",
+			Usage:       "Show service logs",
+			Description: `Show the logs of a service.`,
 			Flags: []cli.Flag{
 				&cli.IntFlag{
 					Name:    "lines",
@@ -270,7 +271,7 @@ var serviceCmd *cli.Command = &cli.Command{
 					return err
 				}
 
-				prog, err := hxeClient.Service.Tail(cmd.Args().First())
+				prog, err := hxeClient.Service.Log(cmd.Args().First())
 				if err != nil {
 					return fmt.Errorf("failed to run command: %w", err)
 				}

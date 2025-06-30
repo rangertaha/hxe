@@ -107,14 +107,14 @@ type Service struct {
 	EndTime   int64              `json:"endTime" gorm:"column:ended"`
 	Uptime    time.Duration      `json:"uptime" gorm:"column:uptime"`
 	Status    ServiceStatus      `json:"status"`
-	Metrics   map[string]float64 `json:"metrics" gorm:"serialize:json"`
+	// Metrics   map[string]float64 `json:"metrics" gorm:"serialize:json"`
 
 	// Relations
 	App        App      `json:"app"`
 	AppID      uint     `json:"-" gorm:"column:aid"`
 	Category   Category `json:"category"`
 	CategoryID uint     `json:"-" gorm:"column:cid"`
-	Actions    []Action `json:"actions" gorm:"serialize:json"`
+	// Actions    []Action `json:"actions" gorm:"serialize:json"`
 }
 
 type Action struct {

@@ -1,0 +1,102 @@
+syntax = "proto3";
+package models;   
+
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/rangertaha/hxe/internal/modules/models;models";
+
+
+// ServiceStatus as enum
+enum ServiceStatus {
+  STATE_READY = 0;
+  STATE_LOADING = 1;
+  STATE_STARTING = 2;
+  STATE_RESTARTING = 3;
+  STATE_RUNNING = 4;
+  STATE_STOPPING = 5;
+  STATE_STOPPED = 6;
+  STATE_FAILED = 7;
+  STATE_SUCCESS = 8;
+  STATE_UNKNOWN = 9;
+}
+
+message App {
+  uint32 id = 1;
+  string name = 2;
+  string title = 3;
+  string desc = 4;
+  repeated Tag tags = 5;
+}
+
+message Apps {
+  repeated App apps = 1;
+}
+
+message Tag {
+  string key = 1;
+  string value = 2;
+}
+
+message Tags {
+  repeated Tag tags = 1;
+}
+
+
+message Action {
+  string icon = 1;
+  string name = 2;
+  string label = 3;
+  string tooltip = 4;
+  repeated Tag tags = 5;
+}
+
+message Actions {
+  repeated Action actions = 1;
+}
+
+message Category {
+  uint32 id = 1;
+  string name = 2;
+  string title = 3;
+  string desc = 4;
+  repeated Tag tags = 5;
+  repeated Service services = 6;
+}
+
+message Categories {
+  repeated Category categories = 1;
+}
+
+message Service {
+  uint32 id = 1;
+  string name = 2;
+  string description = 3;
+  string user = 4;
+  string group = 5;
+  string directory = 6;
+  string pre_exec = 7;
+  string cmd_exec = 8;
+  string post_exec = 9;
+  bool autostart = 10;
+  int32 retries = 11;
+  bool enabled = 12;
+  int32 pid = 13;
+  int32 exit = 14;
+  int64 started = 15;
+  int64 ended = 16;
+  google.protobuf.Duration uptime = 17;
+  ServiceStatus status = 18;
+  map<string, double> metrics = 19;
+  uint64 category_id = 20;
+  Category category = 21;
+  uint64 app_id = 22;
+  App app = 23; // Define App message if needed
+  repeated Tag tags = 24; 
+  repeated Action actions = 25;
+}
+
+
+message Services {
+  repeated Service services = 1;
+}

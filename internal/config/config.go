@@ -21,18 +21,17 @@ package config
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
+	"github.com/nats-io/nats.go"
 	"github.com/rangertaha/hxe/internal"
 	"github.com/rangertaha/hxe/internal/log"
-	"github.com/rangertaha/hxe/internal/models"
+	"github.com/rangertaha/hxe/internal/rdb"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 
 	_ "embed"
 
@@ -42,7 +41,7 @@ import (
 
 const (
 	CONFIG_DIR      = "hxe"
-	CONFIG_FILE     = "server.hcl"
+	CONFIG_FILE     = "config.hcl"
 	PROCESS_FILE    = "example.hcl"
 	DATABASE_FILE   = "hxe.db"
 	DEFAULT_SUBJECT = "hxe"
@@ -51,9 +50,6 @@ const (
 var (
 	//go:embed config.hcl
 	DefaultConfig []byte
-
-	//go:embed example.hcl
-	DefaultExample []byte
 )
 
 type (
@@ -63,19 +59,35 @@ type (
 		Version string `hcl:"version,optional"`
 		Banner  bool   `hcl:"banner,optional"`
 		ProgDir string `hcl:"programs,optional"`
+		Mq      Mq     `hcl:"mq,block"`
+		Rdb     Rdb    `hcl:"rdb,block"`
+		Tdb     Tdb    `hcl:"tdb,block"`
+		API     API    `hcl:"api,block"`
 
-		Services []models.Service
-		Database Database `hcl:"database,block"`
-		Broker   Broker   `hcl:"broker,block"`
-		API      API      `hcl:"api,block"`
-		Log      Log      `hcl:"log,block"`
+		// Modules
+		// Messaging Messaging `hcl:"nats,block"`
+		// Schedules Schedules
+		// Services  Services
+		// Alerts    Alerts
 
+		// Logging
 		ConfigFile string
 	}
-	Log struct {
-		Level  string `hcl:"level,optional"`
-		Format string `hcl:"format,optional"`
+
+	Services struct {
+		Host string `hcl:"host,optional"`
+		Port int    `hcl:"port,optional"`
+		NC   *nats.Conn
 	}
+
+	Alerts struct {
+		NC *nats.Conn
+	}
+
+	Schedules struct {
+		NC *nats.Conn
+	}
+
 	API struct {
 		Host     string `hcl:"addr,optional"`
 		Port     int    `hcl:"port,optional"`
@@ -83,14 +95,26 @@ type (
 		Password string `hcl:"password,optional"`
 		Token    string `hcl:"token,optional"`
 		URL      string `hcl:"url,optional"`
+		NC       *nats.Conn
 	}
-	Database struct {
-		Type     string `hcl:"type,optional"`
+
+	Rdb struct {
+		Name     string `hcl:"type,label"`
 		Host     string `hcl:"host,optional"`
 		Port     int    `hcl:"port,optional"`
 		Username string `hcl:"username,optional"`
 		Password string `hcl:"password,optional"`
 		Migrate  bool   `hcl:"migrate,optional"`
+		NC       *nats.Conn
+	}
+	Tdb struct {
+		Name  string `hcl:"type,label"`
+		Host  string `hcl:"host,optional"`
+		Port  int    `hcl:"port,optional"`
+		User  string `hcl:"username,optional"`
+		Pass  string `hcl:"password,optional"`
+		Token string `hcl:"token,optional"`
+		NC    *nats.Conn
 	}
 )
 
@@ -106,9 +130,6 @@ func New(options ...func(*Config) error) (*Config, error) {
 		Version: internal.VERSION,
 	}
 
-	// Default values
-	DefaultOptions()(s)
-
 	// Apply config options
 	for _, opt := range options {
 		err := opt(s)
@@ -117,97 +138,49 @@ func New(options ...func(*Config) error) (*Config, error) {
 		}
 	}
 
-	if s.Debug {
-		log.SetGlobalLevel(zerolog.DebugLevel)
-	}
-
 	if s.Banner {
 		internal.PrintBanner()
 	}
 
-	if s.API.URL == "" {
+	if s.API.URL == "" && s.API.Host != "" && s.API.Port != 0 {
 		s.API.URL = fmt.Sprintf("http://%s:%d", s.API.Host, s.API.Port)
+	}
+
+	if s.Debug {
+		log.SetGlobalLevel(zerolog.TraceLevel)
 	}
 
 	return s, nil
 }
 
-func (c *Config) LoadConfig(path string) (err error) {
-	if err = hclsimple.DecodeFile(path, CtxFunctions, c); err != nil {
-		return fmt.Errorf("error parsing config file: %w", err)
-	}
-	return
-}
-
-func (c *Config) LoadService(ppath string) (err error) {
-	log.Info().Str("path", ppath).Msg("loading programs from directory")
-	err = filepath.WalkDir(ppath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			log.Error().Err(err).Str("path", path).Msg("error accessing path")
-			return err
-		}
-
-		if !d.IsDir() {
-			log.Info().Str("file", path).Msg("loading program")
-			var program models.Service
-			if strings.HasSuffix(path, ".hcl") {
-				if err := hclsimple.DecodeFile(path, CtxFunctions, &program); err != nil {
-					log.Warn().Err(err).Str("file", path).Msg("failed to parse program file")
-				} else {
-					c.Services = append(c.Services, program)
-				}
+func CliOptions(ctx context.Context, cmd *cli.Command) func(c *Config) error {
+	return func(c *Config) error {
+		if cmd.String("config") != "" {
+			// if config file is provided, use it
+			c.ConfigFile = cmd.String("config")
+			if err := FileOption(c.ConfigFile)(c); err != nil {
+				return err
+			}
+		} else {
+			// if config file is not provided, use default options
+			if err := DefaultOptions()(c); err != nil {
+				return err
 			}
 		}
-		return nil
-	})
-
-	// Errors that occurred during the walk.
-	if err != nil {
-		log.Error().Err(err).Str("path", c.ProgDir).Msg("error walking the path")
-		os.Exit(1)
-	}
-
-	// Update the config with loaded programs
-	log.Info().Int("count", len(c.Services)).Msg("finished loading programs")
-	return
-}
-
-func (c *Config) LoadDatabase(db Database) (err error) {
-	log.Info().Msg("loading programs from directory")
-
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		return fmt.Errorf("error getting user config directory: %w", err)
-	}
-
-	// Use SQLite database
-	if db.Type == "sqlite" {
-		dbFile := filepath.Join(userConfigDir, CONFIG_DIR, DATABASE_FILE)
-		log.Info().Str("file", dbFile).Msg("using existing SQLite database")
-		models.DB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-		if err != nil {
-			return err
+		if cmd.Bool("debug") {
+			c.Debug = true
+			rdb.SeedServices() //--------------------------------------REMOVE
 		}
-	}
-	// Use in-memory SQLite database
+		if cmd.String("username") != "" {
+			c.API.Username = cmd.String("username")
+		}
+		if cmd.String("password") != "" {
+			c.API.Password = cmd.String("password")
+		}
+		if cmd.String("url") != "" {
+			c.API.URL = cmd.String("url")
+		}
 
-	// Auto migrate the schema
-	if db.Migrate {
-		models.AutoMigrate(models.DB)
-		SeedServices(models.DB)
-	}
-
-	if c.Debug {
-		models.DB.Logger = models.DB.Logger.LogMode(logger.Info)
-	}
-
-	return
-}
-
-func CliOptions(ctx context.Context, cmd *cli.Command) func(c *Config) error {
-
-	return func(c *Config) error {
-		c.Debug = cmd.Bool("debug")
 		return nil
 	}
 }
@@ -215,22 +188,17 @@ func CliOptions(ctx context.Context, cmd *cli.Command) func(c *Config) error {
 func FileOption(path string) func(*Config) error {
 	return func(c *Config) error {
 		if path == "" {
-			return nil
+			return fmt.Errorf("config file path is required")
 		}
 
-		c.ConfigFile = path
-
-		if err := c.LoadConfig(c.ConfigFile); err != nil {
+		if err := c.Load(path); err != nil {
 			return fmt.Errorf("error parsing config file: %w", err)
-		}
-
-		if err := c.LoadService(c.ProgDir); err != nil {
-			return fmt.Errorf("error parsing program file: %w", err)
 		}
 
 		return nil
 	}
 }
+
 func DefaultOptions() func(*Config) error {
 	return func(c *Config) error {
 
@@ -243,30 +211,106 @@ func DefaultOptions() func(*Config) error {
 			return fmt.Errorf("error creating config file: %w", err)
 		}
 
-		c.ProgDir = filepath.Join(userConfigDir, CONFIG_DIR, "configs")
-		exampleFile := filepath.Join(c.ProgDir, PROCESS_FILE)
-		if err := createFileIfNotExists(exampleFile, DefaultExample); err != nil {
-			return fmt.Errorf("error creating default program config: %w", err)
-		}
+		// c.ProgDir = filepath.Join(userConfigDir, CONFIG_DIR, "configs")
+		// exampleFile := filepath.Join(c.ProgDir, PROCESS_FILE)
+		// if err := createFileIfNotExists(exampleFile, DefaultExample); err != nil {
+		// 	return fmt.Errorf("error creating default program config: %w", err)
+		// }
 
-		if err := c.LoadConfig(c.ConfigFile); err != nil {
+		if err := c.Load(c.ConfigFile); err != nil {
 			return fmt.Errorf("error parsing config file: %w", err)
 		}
 
-		if err := c.LoadService(c.ProgDir); err != nil {
-			return fmt.Errorf("error parsing program file: %w", err)
-		}
+		// if err := c.LoadService(c.ProgDir); err != nil {
+		// 	return fmt.Errorf("error parsing program file: %w", err)
+		// }
 
-		if err := c.LoadDatabase(c.Database); err != nil {
-			return fmt.Errorf("error parsing database file: %w", err)
-		}
-
-		if c.API.URL == "" {
-			c.API.URL = fmt.Sprintf("http://%s:%d", c.API.Host, c.API.Port)
-		}
+		// if err := c.LoadDatabase(c.Database); err != nil {
+		// 	return fmt.Errorf("error parsing database file: %w", err)
+		// }
 
 		return nil
 	}
+}
+
+func (c *Config) Load(path string) (err error) {
+	if err = hclsimple.DecodeFile(path, CtxFunctions, c); err != nil {
+		return fmt.Errorf("error parsing config file: %w", err)
+	}
+
+	if c.Rdb.Name == "" {
+		c.Rdb.Name = "sqlite"
+	}
+
+	if c.API.URL == "" {
+		c.API.URL = fmt.Sprintf("http://%s:%d", c.API.Host, c.API.Port)
+	}
+
+	if err := c.loadDatabase(); err != nil {
+		return fmt.Errorf("error loading database: %w", err)
+	}
+
+	return
+}
+
+// func (c *Config) LoadService(ppath string) (err error) {
+// 	log.Info().Str("path", ppath).Msg("loading programs from directory")
+// 	err = filepath.WalkDir(ppath, func(path string, d fs.DirEntry, err error) error {
+// 		if err != nil {
+// 			log.Error().Err(err).Str("path", path).Msg("error accessing path")
+// 			return err
+// 		}
+
+// 		if !d.IsDir() {
+// 			log.Info().Str("file", path).Msg("loading program")
+// 			var program rdb.Service
+// 			if strings.HasSuffix(path, ".hcl") {
+// 				if err := hclsimple.DecodeFile(path, CtxFunctions, &program); err != nil {
+// 					log.Warn().Err(err).Str("file", path).Msg("failed to parse program file")
+// 				} else {
+// 					c.Services = append(c.Services, program)
+// 				}
+// 			}
+// 		}
+// 		return nil
+// 	})
+
+// 	// Errors that occurred during the walk.
+// 	if err != nil {
+// 		log.Error().Err(err).Str("path", c.ProgDir).Msg("error walking the path")
+// 		os.Exit(1)
+// 	}
+
+// 	// Update the config with loaded programs
+// 	log.Info().Int("count", len(c.Services)).Msg("finished loading programs")
+// 	return
+// }
+
+func (c *Config) loadDatabase() (err error) {
+	log.Info().Msg("setting up database")
+
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		return fmt.Errorf("error getting user config directory: %w", err)
+	}
+
+	// Use SQLite database file
+	if strings.ToLower(c.Rdb.Name) == "sqlite" {
+		dbFile := filepath.Join(userConfigDir, CONFIG_DIR, DATABASE_FILE)
+		log.Info().Str("file", dbFile).Msg("using existing SQLite database")
+		rdb.DB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+		if err != nil {
+			return err
+		}
+	}
+	// Use in-memory SQLite database
+
+	// Auto migrate the schema
+	if c.Rdb.Migrate {
+		rdb.AutoMigrate(rdb.DB)
+	}
+
+	return
 }
 
 func createFileIfNotExists(filename string, contents []byte) error {

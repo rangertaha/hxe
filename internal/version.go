@@ -25,7 +25,8 @@ import "fmt"
 
 const NAME = "hxe"
 const VERSION = "0.0.1"
-const COMPILED = "2025-06-18"
+const COMPILED = "2025-06-27"
+const COMMIT = "35a7441"
 const BANNER = `   
   _   _          
  | | | |_  _____ 
@@ -35,6 +36,7 @@ const BANNER = `
                          
  Host eXecution Engine
 ______________________________________________
+COMMIT:  %s
 AUTHOR:  Rangertaha
 VERSION: v%s
 DATE:    %s
@@ -42,7 +44,7 @@ DATE:    %s
 `
 
 func Banner() string {
-	return fmt.Sprintf(BANNER, VERSION, COMPILED)
+	return fmt.Sprintf(BANNER, COMMIT, VERSION, COMPILED)
 }
 
 func PrintBanner() {

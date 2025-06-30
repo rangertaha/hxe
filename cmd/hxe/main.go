@@ -24,14 +24,15 @@ import (
 	"os"
 
 	"github.com/rangertaha/hxe/internal"
-	"github.com/rangertaha/hxe/internal/agent"
 	"github.com/rangertaha/hxe/internal/config"
+	"github.com/rangertaha/hxe/internal/engine"
 	"github.com/urfave/cli/v3"
 )
 
 var (
 	CfgOption *config.Config
-	newAgent  *agent.Agent
+	HxeConfig *config.Config
+	newAgent  *engine.Agent
 	serverURL string
 	username  string
 	password  string
@@ -79,7 +80,7 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:        "url",
-				Value:       "",
+				Value:       "http://0.0.0.0:9090",
 				Hidden:      false,
 				Usage:       "Hxe API server URL",
 				Destination: &serverURL,
@@ -87,12 +88,10 @@ func main() {
 		},
 		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 			// Load configuration file
-			cfgFile := cmd.String("config")
 			cliOptions := config.CliOptions(ctx, cmd)
-			fileOptions := config.FileOption(cfgFile)
-
+			
 			// Create new config
-			if CfgOption, err = config.New(fileOptions, cliOptions); err != nil {
+			if HxeConfig, err = config.New(cliOptions); err != nil {
 				return ctx, err
 			}
 
@@ -109,7 +108,7 @@ func main() {
 				Description: `Start the HXE server.`,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					// Create new agent
-					if newAgent, err = agent.New(CfgOption); err != nil {
+					if newAgent, err = engine.New(HxeConfig); err != nil {
 						return err
 					}
 

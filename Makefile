@@ -8,7 +8,7 @@ GOGET=$(GOCMD) get
 GODOC=$(GOCMD) doc
 BDIR=build
 $(shell mkdir -p $(BDIR))
-BINARY_NAME=urlinsane
+BINARY_NAME=hxe
 VERSION=$(shell grep -e 'VERSION = ".*"' internal/version.go | cut -d= -f2 | sed  s/[[:space:]]*\"//g)
 
 .PHONY: help version build install dpkg deps test clean doc
@@ -37,9 +37,15 @@ tag: ## Tagging the current commit
 
 proto: ## Generating protobuf code
 	@echo "Generating protobuf code..."
-	@protoc --go_out=. --go_opt=paths=source_relative internal/api/models/models.proto
+	@protoc --go_out=. --go_opt=paths=source_relative internal/modules/services/models/models.proto
 
-# protoc --go_out=. --go_opt=paths=source_relative internal/models/models.proto
+banner: ## Updating banner
+	@echo "Updating banner..."
+	./scripts/banner.sh
+
+version: ## Updating version
+	@echo "Updating version..."
+	./scripts/version.sh
 
 # #!/bin/bash
 

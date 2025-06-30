@@ -19,95 +19,258 @@
 package handlers
 
 import (
-	"fmt"
+	"net/http"
+	"strconv"
 
-	"github.com/nats-io/nats.go/micro"
+	"github.com/labstack/echo/v4"
+	"github.com/rangertaha/hxe/internal/client"
+	"github.com/rangertaha/hxe/internal/log"
+	"github.com/rangertaha/hxe/internal/modules/services/models"
+	"github.com/rs/zerolog"
 )
 
 type Service struct {
-	micro.Group
+	Client *client.Client
+	log    zerolog.Logger
 }
 
-func NewService(group micro.Group) *Service {
-	return &Service{group}
+func NewService(c *client.Client) *Service {
+	return &Service{
+		Client: c,
+		log:    log.With().Logger(),
+	}
 }
 
-func (e *Service) Init() (err error) {
-	e.AddEndpoint("load", micro.HandlerFunc(e.Load))
-	e.AddEndpoint("list", micro.HandlerFunc(e.List))
-	e.AddEndpoint("list", micro.HandlerFunc(e.Get))
-	e.AddEndpoint("create", micro.HandlerFunc(e.Create))
-	e.AddEndpoint("update", micro.HandlerFunc(e.Update))
-	e.AddEndpoint("delete", micro.HandlerFunc(e.Delete))
-	e.AddEndpoint("start", micro.HandlerFunc(e.Start))
-	e.AddEndpoint("stop", micro.HandlerFunc(e.Stop))
-	e.AddEndpoint("restart", micro.HandlerFunc(e.Restart))
-	e.AddEndpoint("status", micro.HandlerFunc(e.Status))
-	e.AddEndpoint("log", micro.HandlerFunc(e.Log))
-	e.AddEndpoint("shell", micro.HandlerFunc(e.Shell))
+func ServiceRoutes(e *echo.Group, c *client.Client) {
+	// Services
+	service := NewService(c)
+	svc := e.Group("/service")
+	svc.GET("", service.List)
+	svc.GET("/:id", service.Get)
+	svc.POST("", service.Create)
+	svc.PUT("/:id", service.Update)
+	svc.DELETE("/:id", service.Delete)
+	// svc.OPTIONS("", service.Schema)
 
-	return
+	// Runtime handlers
+	svc.POST("/:id/start", service.Start)
+	svc.POST("/:id/stop", service.Stop)
+	svc.POST("/:id/restart", service.Restart)
+	svc.POST("/:id/status", service.Status)
+	svc.POST("/:id/reload", service.Reload)
+	svc.POST("/:id/enable", service.Enable)
+	svc.POST("/:id/disable", service.Disable)
+
+	// Stream handlers
+	svc.POST("/:id/shell", service.Shell)
+	svc.POST("/:id/log", service.Log)
 }
 
-// Runtime CRUD operations in a database
-
-// Load a service
-func (s *Service) Load(msg micro.Request) {
-	fmt.Println("load:service")
+// CRUD HANDLERS
+func (s *Service) List(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	records, err := s.Client.Services.List()
+	if err != nil {
+		s.log.Error().Err(err).Msg("failed to list services")
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list services"})
+	}
+	return c.JSON(http.StatusOK, records)
 }
 
-// List all services
-func (s *Service) List(msg micro.Request) {
-	fmt.Println("list:services")
+func (s *Service) Get(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	record, err := s.Client.Services.Get(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, record)
 }
 
-// Get a service by ID
-func (s *Service) Get(msg micro.Request) {
-	fmt.Println("get:service")
+func (s *Service) Create(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	var prog models.Service
+	if err := c.Bind(&prog); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	record, err := s.Client.Services.Create(&prog)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, record)
 }
 
-// Create a new service
-func (s *Service) Create(msg micro.Request) {
-	fmt.Println("create:service")
+func (s *Service) Update(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	var svc models.Service
+	if err := c.Bind(&svc); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	service, err := s.Client.Services.Update(&svc)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, service)
 }
 
-// Update a service
-func (s *Service) Update(msg micro.Request) {
-	fmt.Println("update:service")
+func (s *Service) Delete(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Delete(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
 }
 
-// Delete a service
-func (s *Service) Delete(msg micro.Request) {
-	fmt.Println("delete:service")
+// RUNTIME HANDLERS
+func (s *Service) Start(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Start(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
 }
 
-// Runtime operations sending commands to a service executor plugins
-
-// Start a service
-func (s *Service) Start(msg micro.Request) {
-	fmt.Println("start:service")
+func (s *Service) Stop(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Stop(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
 }
 
-// Stop a service
-func (s *Service) Stop(msg micro.Request) {
-	fmt.Println("stop:service")
+func (s *Service) Restart(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Restart(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
 }
 
-// Restart a service
-func (s *Service) Restart(msg micro.Request) {
-	fmt.Println("restart:service")
+func (s *Service) Status(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Status(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
 }
 
-// Status of a service
-func (s *Service) Status(msg micro.Request) {
-	fmt.Println("status:service")
+func (s *Service) Reload(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Reload(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
 }
 
-// Log a service
-func (s *Service) Log(msg micro.Request) {
-	fmt.Println("log:service")
+func (s *Service) Enable(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Enable(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
 }
 
-func (s *Service) Shell(msg micro.Request) {
-	fmt.Println("shell:service")
+func (s *Service) Disable(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Disable(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
+}
+
+func (s *Service) Shell(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Shell(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
+}
+
+func (s *Service) Log(c echo.Context) error {
+	if s.Client == nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+	}
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+	svc, err := s.Client.Services.Log(uint(id), "stdout")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, svc)
 }
