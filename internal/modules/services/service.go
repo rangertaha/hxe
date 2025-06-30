@@ -21,13 +21,14 @@ package services
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/micro"
 	"github.com/rangertaha/hxe/internal"
+	"github.com/rangertaha/hxe/internal/modules/services/handlers"
 	"github.com/rangertaha/hxe/internal/modules/services/models"
 	"github.com/rangertaha/hxe/internal/rdb"
-	"google.golang.org/protobuf/proto"
 )
 
 type Service struct {
@@ -38,7 +39,7 @@ type Service struct {
 
 func NewService(nc *nats.Conn) (s *Service, err error) {
 	s = &Service{
-		Runner:  NewRunner(),
+		Runner: NewRunner(),
 	}
 	config := micro.Config{
 		Name:        "Services",
@@ -63,125 +64,116 @@ func NewService(nc *nats.Conn) (s *Service, err error) {
 
 func (e *Service) Init() (err error) {
 	svc := e.Service.AddGroup("service")
-	svc.AddEndpoint("load", micro.HandlerFunc(e.Load))
-	svc.AddEndpoint("list", micro.HandlerFunc(e.List))
-	svc.AddEndpoint("get", micro.HandlerFunc(e.Get))
-	svc.AddEndpoint("create", micro.HandlerFunc(e.Create))
-	svc.AddEndpoint("update", micro.HandlerFunc(e.Update))
-	svc.AddEndpoint("delete", micro.HandlerFunc(e.Delete))
-	svc.AddEndpoint("start", micro.HandlerFunc(e.Start))
-	svc.AddEndpoint("stop", micro.HandlerFunc(e.Stop))
-	svc.AddEndpoint("restart", micro.HandlerFunc(e.Restart))
-	svc.AddEndpoint("status", micro.HandlerFunc(e.Status))
-	svc.AddEndpoint("log", micro.HandlerFunc(e.Log))
-	svc.AddEndpoint("shell", micro.HandlerFunc(e.Shell))
+
+	// Custom error handler for better error responses
+	errorHandler := func(err error) (string, string, map[string]string) {
+		// You can implement custom error mapping here
+		if strings.Contains(err.Error(), "database") {
+			return "503", "Service temporarily unavailable", map[string]string{"retry_after": "30"}
+		}
+		if strings.Contains(err.Error(), "not found") {
+			return "404", "Resource not found", nil
+		}
+		return "500", err.Error(), nil
+	}
+
+	// Use the wrapper functions for cleaner handler registration
+	svc.AddEndpoint("load", handlers.WrapSimple(e.Load))
+	svc.AddEndpoint("list", handlers.WrapWithErrorHandler(e.List, errorHandler))
+	svc.AddEndpoint("get", handlers.WrapWithErrorHandler(e.Get, errorHandler))
+	svc.AddEndpoint("create", handlers.Wrap(e.Create))
+	svc.AddEndpoint("update", handlers.Wrap(e.Update))
+	svc.AddEndpoint("delete", handlers.Wrap(e.Delete))
+	svc.AddEndpoint("start", handlers.WrapNoResponse(e.Start))
+	svc.AddEndpoint("stop", handlers.WrapNoResponse(e.Stop))
+	svc.AddEndpoint("restart", handlers.WrapNoResponse(e.Restart))
+	svc.AddEndpoint("status", handlers.Wrap(e.Status))
+	svc.AddEndpoint("log", handlers.Wrap(e.Log))
+	svc.AddEndpoint("shell", handlers.Wrap(e.Shell))
 
 	return
 }
 
-// Runtime CRUD operations in a database
+// Now your handlers become much simpler - they just focus on business logic
 
-// Load a service
-func (s *Service) Load(msg micro.Request) {
-	fmt.Println("load:service")
+// Load a service (no request needed)
+func (s *Service) Load() (*models.Services, error) {
+	// Your load logic here
+	return &models.Services{}, nil
 }
 
 // List all services
-func (s *Service) List(msg micro.Request) {
-	var req models.Service
-	if err := proto.Unmarshal(msg.Data(), &req); err != nil {
-		msg.Error("500", "Failed to unmarshal request", nil)
-		return
-	}
-
+func (s *Service) List(req *models.Service) (*models.Services, error) {
 	// Get services from database
 	services := []rdb.Service{}
 	if err := rdb.DB.Find(&services).Error; err != nil {
-		msg.Error("500", "Database error", nil)
-		return
+		return nil, fmt.Errorf("database error: %w", err)
 	}
+
 	for _, service := range services {
 		log.Println(service)
 	}
 
-	protoServices := models.ToProtoServices(services)
-
-	// Marshal response
-	data, err := proto.Marshal(protoServices)
-	if err != nil {
-		msg.Error("500", "Failed to marshal response", nil)
-		return
-	}
-	msg.Respond(data)
+	return models.ToProtoServices(services), nil
 }
 
 // Get a service by ID
-func (s *Service) Get(msg micro.Request) {
-	// var req models.Services
-	// msg.Unmarshal(req)
-
-	fmt.Println("get:service")
-	msg.Respond([]byte("get:service"))
+func (s *Service) Get(req *models.Service) (*models.Service, error) {
+	// Your get logic here
+	return req, nil
 }
 
 // Create a new service
-func (s *Service) Create(msg micro.Request) {
-	fmt.Println("create:service")
-	msg.Respond([]byte("create:service"))
+func (s *Service) Create(req *models.Service) (*models.Service, error) {
+	// Your create logic here
+	return req, nil
 }
 
 // Update a service
-func (s *Service) Update(msg micro.Request) {
-	fmt.Println("update:service")
-	msg.Respond([]byte("update:service"))
+func (s *Service) Update(req *models.Service) (*models.Service, error) {
+	// Your update logic here
+	return req, nil
 }
 
 // Delete a service
-func (s *Service) Delete(msg micro.Request) {
-	fmt.Println("delete:service")
-	msg.Respond([]byte("delete:service"))
+func (s *Service) Delete(req *models.Service) (*models.Service, error) {
+	// Your delete logic here
+	return req, nil
 }
 
-// Runtime operations sending commands to a service executor plugins
-
-// Start a service
-func (s *Service) Start(msg micro.Request) {
+// Start a service (no response needed)
+func (s *Service) Start(req *models.Service) error {
 	s.Runner.Start()
-
-	fmt.Println("start:service")
-	msg.Respond([]byte("start:service"))
+	return nil
 }
 
-// Stop a service
-func (s *Service) Stop(msg micro.Request) {
+// Stop a service (no response needed)
+func (s *Service) Stop(req *models.Service) error {
 	s.Runner.Stop()
-	fmt.Println("stop:service")
-	msg.Respond([]byte("stop:service"))
+	return nil
 }
 
-// Restart a service
-func (s *Service) Restart(msg micro.Request) {
+// Restart a service (no response needed)
+func (s *Service) Restart(req *models.Service) error {
 	s.Runner.Restart()
-
-	fmt.Println("restart:service")
-	msg.Respond([]byte("restart:service"))
+	return nil
 }
 
 // Status of a service
-func (s *Service) Status(msg micro.Request) {
+func (s *Service) Status(req *models.Service) (*models.Service, error) {
 	s.Runner.Status()
-
-	fmt.Println("status:service")
-	msg.Respond([]byte("status:service"))
+	// Return status response
+	return req, nil
 }
 
 // Log a service
-func (s *Service) Log(msg micro.Request) {
-	fmt.Println("log:service")
-	msg.Respond([]byte("log:service"))
+func (s *Service) Log(req *models.Service) (*models.Service, error) {
+	// Your log logic here
+	return req, nil
 }
 
-func (s *Service) Shell(msg micro.Request) {
-	fmt.Println("shell:service")
-	msg.Respond([]byte("shell:service"))
+// Shell a service
+func (s *Service) Shell(req *models.Service) (*models.Service, error) {
+	// Your shell logic here
+	return req, nil
 }

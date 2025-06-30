@@ -84,17 +84,17 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "List all services",
 			Description: `List all services with their current status.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
+				hxec := client.NewClient(serverURL, username, password)
+				if _, err := hxec.Login(); err != nil {
 					return fmt.Errorf("failed to login: %w", err)
 				}
 
-				services, err := hxeClient.Service.List()
+				services, err := hxec.Service.List()
 				if err != nil {
 					return fmt.Errorf("failed to list services: %w", err)
 				}
 
-				hxeClient.Service.Print(services)
+				hxec.Service.Print(services)
 				return nil
 			},
 		},

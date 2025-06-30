@@ -104,8 +104,8 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:        "server",
-				Usage:       "Start the HXE server",
-				Description: `Start the HXE server.`,
+				Usage:       "Start the Hxe server",
+				Description: `Start the Hxe server.`,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					// Create new agent
 					if newAgent, err = engine.New(HxeConfig); err != nil {
