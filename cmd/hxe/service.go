@@ -39,19 +39,15 @@ var serviceCmd *cli.Command = &cli.Command{
 	EnableShellCompletion: true,
 	Suggest:               true,
 
-	// Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-	// 	// Load configuration file
-	// 	cfgFile := cmd.String("config")
-	// 	cliOptions := config.CliOptions(ctx, cmd)
-	// 	fileOptions := config.FileOption(cfgFile)
+	Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+		// Load configuration file
+		hxeClient = client.NewClient(serverURL, username, password)
+		if hxeClient, err = hxeClient.Login(); err != nil {
+			return ctx, err
+		}
 
-	// 	// Create new config
-	// 	if CfgOption, err = config.New(fileOptions, cliOptions); err != nil {
-	// 		return ctx, err
-	// 	}
-
-	// 	return ctx, nil
-	// },
+		return ctx, nil
+	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		cli.ShowSubcommandHelpAndExit(cmd, 1)
 		return nil
@@ -64,10 +60,10 @@ var serviceCmd *cli.Command = &cli.Command{
 			Description: `Run a service. If no service name is provided, 
 				executes the command directly.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
 				command := strings.Join(cmd.Args().Slice(), " ")
 				prog, err := hxeClient.Service.Run(command)
@@ -75,7 +71,7 @@ var serviceCmd *cli.Command = &cli.Command{
 					return fmt.Errorf("failed to run command: %w", err)
 				}
 
-				hxeClient.Service.PrintDetail(prog)
+				hxeClient.Service.Print(prog)
 				return nil
 			},
 		},
@@ -84,17 +80,17 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "List all services",
 			Description: `List all services with their current status.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxec := client.NewClient(serverURL, username, password)
-				if _, err := hxec.Login(); err != nil {
-					return fmt.Errorf("failed to login: %w", err)
-				}
+				// hxec := client.NewClient(serverURL, username, password)
+				// if _, err := hxec.Login(); err != nil {
+				// 	return fmt.Errorf("failed to login: %w", err)
+				// }
 
-				services, err := hxec.Service.List()
+				services, err := hxeClient.Service.List()
 				if err != nil {
 					return fmt.Errorf("failed to list services: %w", err)
 				}
 
-				hxec.Service.Print(services)
+				hxeClient.Service.Print(services)
 				return nil
 			},
 		},
@@ -103,15 +99,15 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Start a service",
 			Description: `Start a service by name.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
-				progs, err := hxeClient.Service.MultiStart(cmd.Args().Slice()...)
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
+				res, err := hxeClient.Service.Start(cmd.Args().First())
 				if err != nil {
 					return fmt.Errorf("failed to run command: %w", err)
 				}
-				hxeClient.Service.Print(progs)
+				hxeClient.Service.Print(res)
 
 				return nil
 			},
@@ -121,12 +117,12 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Stop a service",
 			Description: `Stop a service by name.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
-				progs, err := hxeClient.Service.MultiStop(cmd.Args().Slice()...)
+				progs, err := hxeClient.Service.Stop(cmd.Args().First())
 				if err != nil {
 					return fmt.Errorf("failed to run command: %w", err)
 				}
@@ -139,12 +135,12 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Restart a service",
 			Description: `Restart a service by name.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
-				progs, err := hxeClient.Service.MultiRestart(cmd.Args().Slice()...)
+				progs, err := hxeClient.Service.Restart(cmd.Args().First())
 				if err != nil {
 					return fmt.Errorf("failed to run command: %w", err)
 				}
@@ -153,16 +149,16 @@ var serviceCmd *cli.Command = &cli.Command{
 			},
 		},
 		{
-			Name:        "status",
-			Usage:       "Show service status",
-			Description: `Show the status of a specific service or all services.`,
+			Name:        "get",
+			Usage:       "Get service details by ID",
+			Description: `Get a service details by ID.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
-				progs, err := hxeClient.Service.MultiStatus(cmd.Args().Slice()...)
+				progs, err := hxeClient.Service.Get(cmd.Args().First())
 				if err != nil {
 					return fmt.Errorf("failed to run command: %w", err)
 				}
@@ -175,17 +171,17 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Reload configuration",
 			Description: `Reload the configuration without restarting services.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
 				prog, err := hxeClient.Service.Reload(cmd.Args().First())
 				if err != nil {
 					return fmt.Errorf("failed to run command: %w", err)
 				}
 
-				hxeClient.Service.PrintDetail(prog)
+				hxeClient.Service.Print(prog)
 				return nil
 			},
 		},
@@ -204,7 +200,7 @@ var serviceCmd *cli.Command = &cli.Command{
 					return fmt.Errorf("failed to run command: %w", err)
 				}
 
-				hxeClient.Service.PrintDetail(prog)
+				hxeClient.Service.Print(prog)
 
 				return nil
 			},
@@ -214,17 +210,17 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Disable a service",
 			Description: `Disable a service from starting automatically.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
 				prog, err := hxeClient.Service.Disable(cmd.Args().First())
 				if err != nil {
 					return fmt.Errorf("failed to run command: %w", err)
 				}
 
-				hxeClient.Service.PrintDetail(prog)
+				hxeClient.Service.Print(prog)
 				return nil
 			},
 		},
@@ -233,12 +229,12 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Delete registered service by ID",
 			Description: `Delete a registered service by ID.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
-				progs, err := hxeClient.Service.MultiDelete(cmd.Args().Slice()...)
+				progs, err := hxeClient.Service.Delete(cmd.Args().First())
 				if err != nil {
 					return fmt.Errorf("failed to run command: %w", err)
 				}
@@ -266,17 +262,17 @@ var serviceCmd *cli.Command = &cli.Command{
 				},
 			},
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
-				prog, err := hxeClient.Service.Log(cmd.Args().First())
-				if err != nil {
-					return fmt.Errorf("failed to run command: %w", err)
-				}
+				// prog, err := hxeClient.Service.Log(cmd.Args().Slice())...)
+				// if err != nil {
+				// 	return fmt.Errorf("failed to run command: %w", err)
+				// }
 
-				hxeClient.Service.PrintDetail(prog)
+				// hxeClient.Service.PrintDetail(prog)
 				return nil
 			},
 		},
@@ -285,17 +281,17 @@ var serviceCmd *cli.Command = &cli.Command{
 			Usage:       "Open shell for a service",
 			Description: `Open an interactive shell in the context of a service.`,
 			Action: func(ctx context.Context, cmd *cli.Command) error {
-				hxeClient := client.NewClient(serverURL, username, password)
-				if hxeClient, err = hxeClient.Login(); err != nil {
-					return err
-				}
+				// hxeClient := client.NewClient(serverURL, username, password)
+				// if hxeClient, err = hxeClient.Login(); err != nil {
+				// 	return err
+				// }
 
-				prog, err := hxeClient.Service.Shell(cmd.Args().First())
-				if err != nil {
-					return fmt.Errorf("failed to run command: %w", err)
-				}
+				// prog, err := hxeClient.Service.Shell(cmd.Args().Slice())...)
+				// if err != nil {
+				// 	return fmt.Errorf("failed to run command: %w", err)
+				// }
 
-				hxeClient.Service.PrintDetail(prog)
+				// hxeClient.Service.PrintDetail(prog)
 				return nil
 			},
 		},

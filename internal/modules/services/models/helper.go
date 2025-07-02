@@ -4,12 +4,11 @@ import (
 	"github.com/rangertaha/hxe/internal/rdb"
 )
 
-func ToProtoServices(services []rdb.Service) *Services {
-	protoServices := &Services{}
+func ToProtoServices(services []rdb.Service) (protoServices []*Service) {
 	for _, service := range services {
-		protoServices.Services = append(protoServices.Services, ToProtoService(service))
+		protoServices = append(protoServices, ToProtoService(service))
 	}
-	return protoServices
+	return
 }
 
 func ToProtoService(service rdb.Service) (s *Service) {

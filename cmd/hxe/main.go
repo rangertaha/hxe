@@ -22,10 +22,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/rangertaha/hxe/internal"
 	"github.com/rangertaha/hxe/internal/config"
 	"github.com/rangertaha/hxe/internal/engine"
+	"github.com/rangertaha/hxe/pkg/client"
 	"github.com/urfave/cli/v3"
 )
 
@@ -33,6 +35,7 @@ var (
 	CfgOption *config.Config
 	HxeConfig *config.Config
 	newAgent  *engine.Agent
+	hxeClient *client.Client
 	serverURL string
 	username  string
 	password  string
@@ -89,7 +92,7 @@ func main() {
 		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 			// Load configuration file
 			cliOptions := config.CliOptions(ctx, cmd)
-			
+
 			// Create new config
 			if HxeConfig, err = config.New(cliOptions); err != nil {
 				return ctx, err
@@ -124,4 +127,21 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func strToUint(str string) uint {
+	if u, err := strconv.ParseUint(str, 10, 0); err == nil {
+		return uint(u)
+	}
+	return 0
+}
+
+func strsToUints(strings []string) []uint {
+	var uints []uint
+	for _, str := range strings {
+		if u, err := strconv.ParseUint(str, 10, 0); err == nil {
+			uints = append(uints, uint(u))
+		}
+	}
+	return uints
 }

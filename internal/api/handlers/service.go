@@ -29,6 +29,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var (
+	ErrNotInitialized = Error{Code: http.StatusInternalServerError, Message: "Client not initialized"}
+)
+
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 type Service struct {
 	Client *client.Client
 	log    zerolog.Logger
@@ -69,7 +78,7 @@ func ServiceRoutes(e *echo.Group, c *client.Client) {
 // CRUD HANDLERS
 func (s *Service) List(c echo.Context) error {
 	if s.Client == nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
+		return c.JSON(http.StatusInternalServerError, ErrNotInitialized)
 	}
 	records, err := s.Client.Services.List()
 	if err != nil {

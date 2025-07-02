@@ -19,9 +19,7 @@
 package services
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/micro"
@@ -34,20 +32,19 @@ import (
 type Service struct {
 	Runner  *Runner
 	Service micro.Service
-	Client  *Client
+	Storage *models.Storage
 }
 
 func NewService(nc *nats.Conn) (s *Service, err error) {
 	s = &Service{
-		Runner: NewRunner(),
+		Storage: models.NewStorage(rdb.DB),
+		Runner:  NewRunner(),
 	}
 	config := micro.Config{
 		Name:        "Services",
 		Version:     internal.VERSION,
 		Description: "Process manager",
 	}
-
-	s.Client = NewClient(nc)
 
 	s.Service, err = micro.AddService(nc, config)
 	if err != nil {
@@ -64,116 +61,102 @@ func NewService(nc *nats.Conn) (s *Service, err error) {
 
 func (e *Service) Init() (err error) {
 	svc := e.Service.AddGroup("service")
-
-	// Custom error handler for better error responses
-	errorHandler := func(err error) (string, string, map[string]string) {
-		// You can implement custom error mapping here
-		if strings.Contains(err.Error(), "database") {
-			return "503", "Service temporarily unavailable", map[string]string{"retry_after": "30"}
-		}
-		if strings.Contains(err.Error(), "not found") {
-			return "404", "Resource not found", nil
-		}
-		return "500", err.Error(), nil
-	}
-
-	// Use the wrapper functions for cleaner handler registration
-	svc.AddEndpoint("load", handlers.WrapSimple(e.Load))
-	svc.AddEndpoint("list", handlers.WrapWithErrorHandler(e.List, errorHandler))
-	svc.AddEndpoint("get", handlers.WrapWithErrorHandler(e.Get, errorHandler))
-	svc.AddEndpoint("create", handlers.Wrap(e.Create))
-	svc.AddEndpoint("update", handlers.Wrap(e.Update))
-	svc.AddEndpoint("delete", handlers.Wrap(e.Delete))
-	svc.AddEndpoint("start", handlers.WrapNoResponse(e.Start))
-	svc.AddEndpoint("stop", handlers.WrapNoResponse(e.Stop))
-	svc.AddEndpoint("restart", handlers.WrapNoResponse(e.Restart))
-	svc.AddEndpoint("status", handlers.Wrap(e.Status))
-	svc.AddEndpoint("log", handlers.Wrap(e.Log))
-	svc.AddEndpoint("shell", handlers.Wrap(e.Shell))
+	svc.AddEndpoint("load", handlers.Proto(e.Load))
+	svc.AddEndpoint("list", handlers.Proto(e.List))
+	svc.AddEndpoint("get", handlers.Proto(e.Get))
+	svc.AddEndpoint("create", handlers.Proto(e.Create))
+	svc.AddEndpoint("update", handlers.Proto(e.Update))
+	svc.AddEndpoint("delete", handlers.Proto(e.Delete))
+	svc.AddEndpoint("start", handlers.Proto(e.Start))
+	svc.AddEndpoint("stop", handlers.Proto(e.Stop))
+	svc.AddEndpoint("restart", handlers.Proto(e.Restart))
+	svc.AddEndpoint("status", handlers.Proto(e.Status))
+	svc.AddEndpoint("log", handlers.Proto(e.Log))
+	svc.AddEndpoint("shell", handlers.Proto(e.Shell))
 
 	return
 }
 
-// Now your handlers become much simpler - they just focus on business logic
-
 // Load a service (no request needed)
-func (s *Service) Load() (*models.Services, error) {
-	// Your load logic here
-	return &models.Services{}, nil
+func (s *Service) Load(req *models.Request) (res *models.Response) {
+	s.Runner.Load(req.Service)
+	return
 }
 
 // List all services
-func (s *Service) List(req *models.Service) (*models.Services, error) {
-	// Get services from database
-	services := []rdb.Service{}
-	if err := rdb.DB.Find(&services).Error; err != nil {
-		return nil, fmt.Errorf("database error: %w", err)
-	}
-
-	for _, service := range services {
-		log.Println(service)
-	}
-
-	return models.ToProtoServices(services), nil
+func (s *Service) List(req *models.Request) (res *models.Response) {
+	res = &models.Response{}
+	res.Services, res.Status = s.Storage.List(req.Service)
+	return
 }
 
 // Get a service by ID
-func (s *Service) Get(req *models.Service) (*models.Service, error) {
-	// Your get logic here
-	return req, nil
+func (s *Service) Get(req *models.Request) (res *models.Response) {
+	res = &models.Response{}
+	res.Service, res.Status = s.Storage.Get(req.Service)
+	return
 }
 
 // Create a new service
-func (s *Service) Create(req *models.Service) (*models.Service, error) {
-	// Your create logic here
-	return req, nil
+func (s *Service) Create(req *models.Request) (res *models.Response) {
+	res = &models.Response{}
+	res.Service, res.Status = s.Storage.Create(req.Service)
+	return
 }
 
 // Update a service
-func (s *Service) Update(req *models.Service) (*models.Service, error) {
-	// Your update logic here
-	return req, nil
+func (s *Service) Update(req *models.Request) (res *models.Response) {
+	res = &models.Response{}
+	res.Service, res.Status = s.Storage.Update(req.Service)
+	return
 }
 
 // Delete a service
-func (s *Service) Delete(req *models.Service) (*models.Service, error) {
-	// Your delete logic here
-	return req, nil
+func (s *Service) Delete(req *models.Request) (res *models.Response) {
+	res = &models.Response{}
+	res.Service, res.Status = s.Storage.Delete(req.Service)
+	return
 }
 
-// Start a service (no response needed)
-func (s *Service) Start(req *models.Service) error {
-	s.Runner.Start()
-	return nil
+// Start a service
+func (s *Service) Start(req *models.Request) (res *models.Response) {
+	res = &models.Response{}
+	res.Service, res.Status = s.Storage.Get(req.Service)
+	s.Runner.Start(res.Service)
+	res.Service.Save()
+	return res
 }
 
-// Stop a service (no response needed)
-func (s *Service) Stop(req *models.Service) error {
-	s.Runner.Stop()
-	return nil
+// Stop a service
+func (s *Service) Stop(req *models.Request) (res *models.Response) {
+	res = &models.Response{}
+	res.Service, res.Status = s.Storage.Get(req.Service)
+	s.Runner.Stop(res.Service)
+	return
 }
 
-// Restart a service (no response needed)
-func (s *Service) Restart(req *models.Service) error {
-	s.Runner.Restart()
-	return nil
+// Restart a service
+func (s *Service) Restart(req *models.Request) (res *models.Response) {
+	res = &models.Response{}
+	res.Service, res.Status = s.Storage.Get(req.Service)
+	s.Runner.Restart(res.Service)
+	res.Service.Save()
+	return
 }
 
 // Status of a service
-func (s *Service) Status(req *models.Service) (*models.Service, error) {
-	s.Runner.Status()
-	// Return status response
-	return req, nil
+func (s *Service) Status(req *models.Request) (res *models.Response) {
+	return s.Get(req)
 }
 
 // Log a service
-func (s *Service) Log(req *models.Service) (*models.Service, error) {
-	// Your log logic here
-	return req, nil
+func (s *Service) Log(req *models.Request) (res *models.Response) {
+
+	return
 }
 
 // Shell a service
-func (s *Service) Shell(req *models.Service) (*models.Service, error) {
-	// Your shell logic here
-	return req, nil
+func (s *Service) Shell(req *models.Request) (res *models.Response) {
+
+	return
 }

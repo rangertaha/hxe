@@ -40,8 +40,8 @@ func NewClient(nc *nats.Conn) *Client {
 }
 
 // Load a service
-func (c *Client) Load(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Load(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -52,14 +52,14 @@ func (c *Client) Load(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // List all services
-func (c *Client) List() (resp *models.Services, err error) {
-	req := &models.Service{}
+func (c *Client) List() (resp *models.Response, err error) {
+	req := &models.Request{}
 	data, err := proto.Marshal(req)
 	c.log.Debug().Msgf("service.list request: %s", string(data))
 	if err != nil {
@@ -76,7 +76,7 @@ func (c *Client) List() (resp *models.Services, err error) {
 	}
 	c.log.Debug().Msgf("service.list response: %s", string(msg.Data))
 
-	resp = &models.Services{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	if err != nil {
 		errMsg := "failed to unmarshal service.list response"
@@ -86,8 +86,8 @@ func (c *Client) List() (resp *models.Services, err error) {
 	return resp, nil
 }
 
-func (c *Client) Get(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Get(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -98,13 +98,13 @@ func (c *Client) Get(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Create a new service
-func (c *Client) Create(req *models.Service) (resp *models.Service, err error) {
+func (c *Client) Create(req *models.Service) (resp *models.Response, err error) {
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -115,13 +115,13 @@ func (c *Client) Create(req *models.Service) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Update a service
-func (c *Client) Update(req *models.Service) (resp *models.Service, err error) {
+func (c *Client) Update(req *models.Service) (resp *models.Response, err error) {
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -132,14 +132,14 @@ func (c *Client) Update(req *models.Service) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Delete a service
-func (c *Client) Delete(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Delete(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -150,14 +150,14 @@ func (c *Client) Delete(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Start a service
-func (c *Client) Start(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Start(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -168,14 +168,14 @@ func (c *Client) Start(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Stop a service
-func (c *Client) Stop(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Stop(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -186,14 +186,14 @@ func (c *Client) Stop(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Restart a service
-func (c *Client) Restart(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Restart(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -204,14 +204,14 @@ func (c *Client) Restart(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Status returns service status
-func (c *Client) Status(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Status(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -222,14 +222,14 @@ func (c *Client) Status(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Reload reloads a service
-func (c *Client) Reload(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Reload(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -240,14 +240,14 @@ func (c *Client) Reload(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Enable enables a service
-func (c *Client) Enable(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Enable(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -258,14 +258,14 @@ func (c *Client) Enable(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Disable disables a service
-func (c *Client) Disable(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Disable(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -276,14 +276,14 @@ func (c *Client) Disable(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Shell opens a shell for a service
-func (c *Client) Shell(id uint) (resp *models.Service, err error) {
-	req := &models.Service{Id: uint32(id)}
+func (c *Client) Shell(id uint) (resp *models.Response, err error) {
+	req := &models.Request{Service: &models.Service{Id: uint32(id)}}
 	data, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -294,14 +294,13 @@ func (c *Client) Shell(id uint) (resp *models.Service, err error) {
 		return nil, err
 	}
 
-	resp = &models.Service{}
+	resp = &models.Response{}
 	err = proto.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
 // Log returns service logs
 func (c *Client) Log(id uint, stream string) (resp chan []byte, err error) {
-	// For now, return a simple channel - this would need more complex implementation
 	resp = make(chan []byte, 100)
 	close(resp)
 	return resp, nil

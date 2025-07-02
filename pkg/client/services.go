@@ -40,181 +40,219 @@ func NewServiceClient(client *Client) *ServiceClient {
 }
 
 // Service operations
-func (c *ServiceClient) List() (*models.Services, error) {
-	var services *models.Services
-	err := c.client.Get("/api/service", &services)
+func (c *ServiceClient) List() (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Get("/api/service", &res)
+	return
+}
+
+func (c *ServiceClient) Get(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Get(fmt.Sprintf("/api/service/%s", id), &res)
+	return
+}
+
+// func (c *ServiceClient) Status(ids ...string) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, id := range ids {
+// 		resp, err := c.Get(id)
+
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Services...)
+// 		res.Services = append(res.Services, resp.Service)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Create(req *models.Request) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post("/api/service", req, &res)
+	return
+}
+
+// func (c *ServiceClient) Creates(reqs ...*models.Request) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, req := range reqs {
+// 		resp, err := c.Create(req)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Service)
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Update(req *models.Request) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Put(fmt.Sprintf("/api/service/%d", req.Service.Id), req, &res)
+	return
+}
+
+// func (c *ServiceClient) Updates(reqs ...*models.Request) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, req := range reqs {
+// 		resp, err := c.Update(req)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Service)
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Delete(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Delete(fmt.Sprintf("/api/service/%s", id), &res)
+	return
+}
+
+// func (c *ServiceClient) Deletes(ids ...string) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, id := range ids {
+// 		resp, err := c.Delete(id)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Service)
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Start(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post(fmt.Sprintf("/api/service/%s/start", id), &models.Request{Service: &models.Service{Id: 1}}, &res)
+	// fmt.Println(res)
+	return
+}
+
+// func (c *ServiceClient) Starts(ids ...string) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, id := range ids {
+// 		resp, err := c.Start(id)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Service)
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Stop(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post(fmt.Sprintf("/api/service/%s/stop", id), nil, &res)
+	return
+}
+
+// func (c *ServiceClient) Stops(ids ...string) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, id := range ids {
+// 		resp, err := c.Stop(id)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Service)
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Restart(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post(fmt.Sprintf("/api/service/%s/restart", id), nil, &res)
+	return
+}
+
+// func (c *ServiceClient) Restarts(ids ...string) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, id := range ids {
+// 		resp, err := c.Restart(id)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Service)
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Enable(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post(fmt.Sprintf("/api/service/%s/enable", id), nil, &res)
 	if err != nil {
-		c.log.Error().Err(err).Msg("failed to list services")
 		return nil, err
 	}
-	return services, nil
+	return
 }
 
-func (c *ServiceClient) Get(id string) (*models.Service, error) {
-	var service *models.Service
-	err := c.client.Get(fmt.Sprintf("/api/service/%s", id), &service)
-	return service, err
+// func (c *ServiceClient) Enables(ids ...string) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, id := range ids {
+// 		resp, err := c.Enable(id)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Service)
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Disable(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post(fmt.Sprintf("/api/service/%s/disable", id), nil, &res)
+	return
 }
 
-func (c *ServiceClient) Status(id string) (*models.Service, error) {
-	return c.Get(id)
+// func (c *ServiceClient) Disables(ids ...string) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, id := range ids {
+// 		resp, err := c.Disable(id)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Service)
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Reload(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post(fmt.Sprintf("/api/service/%s/reload", id), nil, &res)
+	return
 }
 
-func (c *ServiceClient) MultiStatus(ids ...string) (services *models.Services, err error) {
-	for _, id := range ids {
-		service, err := c.Status(id)
-		if err != nil {
-			return nil, err
-		}
-		services.Services = append(services.Services, service)
-	}
-	return services, nil
+// func (c *ServiceClient) Reloads(ids ...string) (res *models.Response, err error) {
+// 	res = &models.Response{}
+// 	for _, id := range ids {
+// 		resp, err := c.Reload(id)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		res.Services = append(res.Services, resp.Services...)
+// 	}
+// 	return
+// }
+
+func (c *ServiceClient) Shell(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post(fmt.Sprintf("/api/service/%s/shell", id), nil, &res)
+	return
 }
 
-func (c *ServiceClient) Create(service *models.Service) (*models.Service, error) {
-	var created models.Service
-	err := c.client.Post("/api/service", service, &created)
-	return &created, err
+func (c *ServiceClient) Log(id string) (res *models.Response, err error) {
+	res = &models.Response{}
+	err = c.client.Post(fmt.Sprintf("/api/service/%s/log", id), nil, &res)
+	return
 }
 
-func (c *ServiceClient) Update(id string, service *models.Service) (*models.Service, error) {
-	var updated models.Service
-	err := c.client.Put(fmt.Sprintf("/api/service/%s", id), service, &updated)
-	return &updated, err
-}
-
-func (c *ServiceClient) Delete(id string) (*models.Service, error) {
-	var deleted models.Service
-	err := c.client.Delete(fmt.Sprintf("/api/service/%s", id), &deleted)
-	return &deleted, err
-}
-
-func (c *ServiceClient) MultiDelete(ids ...string) (services *models.Services, err error) {
-	for _, id := range ids {
-		service, err := c.Delete(id)
-		if err != nil {
-			return nil, err
-		}
-		services.Services = append(services.Services, service)
-	}
-	return services, nil
-}
-
-func (c *ServiceClient) Start(id string) (*models.Service, error) {
-	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/start", id), nil, &service)
-	return &service, err
-}
-
-func (c *ServiceClient) MultiStart(ids ...string) (services *models.Services, err error) {
-	for _, id := range ids {
-		service, err := c.Start(id)
-		if err != nil {
-			return nil, err
-		}
-		services.Services = append(services.Services, service)
-	}
-	return services, nil
-}
-
-func (c *ServiceClient) Stop(id string) (*models.Service, error) {
-	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/stop", id), nil, &service)
-	return &service, err
-}
-
-func (c *ServiceClient) MultiStop(ids ...string) (services *models.Services, err error) {
-	for _, id := range ids {
-		service, err := c.Stop(id)
-		if err != nil {
-			return nil, err
-		}
-		services.Services = append(services.Services, service)
-	}
-	return services, nil
-}
-
-func (c *ServiceClient) Restart(id string) (*models.Service, error) {
-	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/restart", id), nil, &service)
-	return &service, err
-}
-
-func (c *ServiceClient) MultiRestart(ids ...string) (services *models.Services, err error) {
-	for _, id := range ids {
-		service, err := c.Restart(id)
-		if err != nil {
-			return nil, err
-		}
-		services.Services = append(services.Services, service)
-	}
-	return services, nil
-}
-
-func (c *ServiceClient) Enable(id string) (*models.Service, error) {
-	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/enable", id), nil, &service)
-	return &service, err
-}
-
-func (c *ServiceClient) MultiEnable(ids ...string) (services *models.Services, err error) {
-	for _, id := range ids {
-		service, err := c.Enable(id)
-		if err != nil {
-			return nil, err
-		}
-		services.Services = append(services.Services, service)
-	}
-	return services, nil
-}
-
-func (c *ServiceClient) Disable(id string) (*models.Service, error) {
-	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/disable", id), nil, &service)
-	return &service, err
-}
-
-func (c *ServiceClient) MultiDisable(ids ...string) (services *models.Services, err error) {
-	for _, id := range ids {
-		service, err := c.Disable(id)
-		if err != nil {
-			return nil, err
-		}
-		services.Services = append(services.Services, service)
-	}
-	return services, nil
-}
-
-func (c *ServiceClient) Reload(id string) (*models.Service, error) {
-	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/reload", id), nil, &service)
-	return &service, err
-}
-
-func (c *ServiceClient) MultiReload(ids ...string) (services *models.Services, err error) {
-	for _, id := range ids {
-		service, err := c.Reload(id)
-		if err != nil {
-			return nil, err
-		}
-		services.Services = append(services.Services, service)
-	}
-	return services, nil
-}
-
-func (c *ServiceClient) Shell(id string) (*models.Service, error) {
-	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/shell", id), nil, &service)
-	return &service, err
-}
-
-func (c *ServiceClient) Log(id string) (*models.Service, error) {
-	var service models.Service
-	err := c.client.Post(fmt.Sprintf("/api/service/%s/log", id), nil, &service)
-	return &service, err
-}
-
-func (c *ServiceClient) Run(command string) (*models.Service, error) {
+func (c *ServiceClient) Run(command string) (res *models.Response, err error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		dir = "/tmp"
@@ -228,60 +266,65 @@ func (c *ServiceClient) Run(command string) (*models.Service, error) {
 		Status:    models.ServiceStatus_STARTING,
 		Enabled:   true,
 	}
+	req := &models.Request{
+		Service: &service,
+	}
 
-	return c.Create(&service)
+	return c.Create(req)
 }
 
-func (c *ServiceClient) PrintDetail(service *models.Service) {
+func (c *ServiceClient) PrintDetail(res *models.Service) {
 	// Create table
 	t := table.NewWriter()
 	t.SetOutputMirror(nil)
 
 	t.AppendHeader(table.Row{"Field", "Value"})
 
-	// Add rows
-	t.AppendRow(table.Row{"ID", service.Id})
-	t.AppendRow(table.Row{"Name", service.Name})
-	t.AppendRow(table.Row{"Command", service.CmdExec})
-	t.AppendRow(table.Row{"Status", service.Status})
-	t.AppendRow(table.Row{"Enabled", service.Enabled})
+	// Add rowss
+	t.AppendRow(table.Row{"ID", res.Id})
+	t.AppendRow(table.Row{"Name", res.Name})
+	t.AppendRow(table.Row{"Command", res.CmdExec})
+	t.AppendRow(table.Row{"Status", res.Status})
+	t.AppendRow(table.Row{"Enabled", res.Enabled})
 
 	// Print the table
 	fmt.Println(t.Render())
 }
 
-func (c *ServiceClient) PrintList(services *models.Services) {
+func (c *ServiceClient) PrintList(res *models.Response) {
 	// Create table
 	t := table.NewWriter()
 	t.SetOutputMirror(nil)
 
-	t.AppendHeader(table.Row{"ID", "Name", "Command", "Status", "Enabled"})
+	t.AppendHeader(table.Row{"ID", "Name", "Command", "Status", "Enabled", "Category", "App"})
 
 	// Add rows
-	for _, service := range services.Services {
+	for _, service := range res.Services {
 		t.AppendRow(table.Row{
 			service.Id,
 			service.Name,
 			service.CmdExec,
 			service.Status,
 			service.Enabled,
+			service.Category,
+			service.App,
 		})
 	}
 	// Print the table
 	fmt.Println(t.Render())
 }
 
-func (c *ServiceClient) Print(services *models.Services) {
-	if len(services.Services) == 0 {
+func (c *ServiceClient) Print(res *models.Response) {
+	if res.Count() == 0 {
 		fmt.Println("No services found")
 		return
 	}
-	if len(services.Services) == 1 {
-		c.PrintDetail(services.Services[0])
-		return
+
+	if res.Count() > 1 {
+		c.PrintList(res)
 	}
-	if len(services.Services) > 1 {
-		c.PrintList(services)
-		return
+
+	if res.Service != nil && res.Service.Id != 0 {
+		c.PrintDetail(res.Service)
 	}
 }

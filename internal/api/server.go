@@ -104,30 +104,18 @@ func (a *Server) Load(cfg *config.API) error {
 }
 
 // Start starts the task
-func (a *Server) Start() error {
+func (a *Server) Start() (err error) {
 	a.log.Info().Msg("starting api")
 
 	// Start server on port
 	a.log.Info().Str("host", a.config.Host).Int("port", a.config.Port).Msg("starting api")
-	if err := a.router.Start(fmt.Sprintf("%s:%d", a.config.Host, a.config.Port)); err != nil {
+	if err = a.router.Start(fmt.Sprintf("%s:%d", a.config.Host, a.config.Port)); err != nil {
 		a.log.Fatal().Err(err).Msg("failed to start api")
 	}
-
-	// for {
-	// 	select {
-	// 	case <-a.done:
-	// 		a.log.Info().Msg("stopping api server")
-	// 		return nil
-	// 	default:
-	// 		time.Sleep(1 * time.Second)
-	// 	}
-	// }
-
-	return nil
+	return
 }
 
 func (a *Server) Stop() error {
-	// close(a.done)
 	a.router.Close()
 	return nil
 }
