@@ -19,13 +19,15 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rangertaha/hxe/internal/client"
 	"github.com/rangertaha/hxe/internal/log"
-	"github.com/rangertaha/hxe/internal/modules/services/models"
+	"github.com/rangertaha/hxe/internal/modules/services"
+	"github.com/rangertaha/hxe/internal/rdb"
 	"github.com/rs/zerolog"
 )
 
@@ -77,15 +79,18 @@ func ServiceRoutes(e *echo.Group, c *client.Client) {
 
 // CRUD HANDLERS
 func (s *Service) List(c echo.Context) error {
-	if s.Client == nil {
-		return c.JSON(http.StatusInternalServerError, ErrNotInitialized)
+
+	req := &services.Request{
+		Service: &rdb.Service{},
 	}
-	records, err := s.Client.Services.List()
+
+	data, _ := json.Marshal(req)
+
+	bytes, err := s.Client.Services.Send("service.list", data)
 	if err != nil {
-		s.log.Error().Err(err).Msg("failed to list services")
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to list services"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, records)
+	return c.JSON(http.StatusOK, bytes)
 }
 
 func (s *Service) Get(c echo.Context) error {
@@ -107,7 +112,7 @@ func (s *Service) Create(c echo.Context) error {
 	if s.Client == nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
 	}
-	var prog models.Service
+	var prog rdb.Service
 	if err := c.Bind(&prog); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -122,7 +127,7 @@ func (s *Service) Update(c echo.Context) error {
 	if s.Client == nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Client not initialized"})
 	}
-	var svc models.Service
+	var svc rdb.Service
 	if err := c.Bind(&svc); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}

@@ -98,7 +98,10 @@ func (a *Server) Load(cfg *config.API) error {
 
 	// Routes
 	handlers.ServiceRoutes(api, a.client)
-	handlers.CategoryRoutes(api, a.client)
+
+	// Setup credentials routes
+	credentialsHandler := handlers.NewCredentials()
+	credentialsHandler.SetupRoutes(api)
 
 	return nil
 }

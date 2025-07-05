@@ -32,12 +32,13 @@ const (
 
 // Client represents an API client for interacting with the hxe API
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
-	token      string
-	username   string
-	password   string
-	Service    *ServiceClient
+	baseURL     string
+	httpClient  *http.Client
+	token       string
+	username    string
+	password    string
+	Service     *ServiceClient
+	Credentials *CredentialClient
 }
 
 // NewAuthenticatedClient creates a new API client with authentication
@@ -54,6 +55,7 @@ func NewClient(baseURL, username, password string) *Client {
 		},
 	}
 	c.Service = NewServiceClient(c)
+	c.Credentials = &CredentialClient{client: c}
 	return c
 }
 

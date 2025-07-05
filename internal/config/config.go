@@ -167,10 +167,10 @@ func CliOptions(ctx context.Context, cmd *cli.Command) func(c *Config) error {
 				return err
 			}
 		}
-		if cmd.Bool("debug") {
-			c.Debug = true
-			rdb.SeedServices() //--------------------------------------REMOVE
-		}
+		// if cmd.Bool("debug") {
+		// 	c.Debug = true
+		// 	rdb.SeedServices() //--------------------------------------REMOVE
+		// }
 		if cmd.String("username") != "" {
 			c.API.Username = cmd.String("username")
 		}

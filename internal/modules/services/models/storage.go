@@ -1,62 +1,72 @@
 package models
 
 import (
+	"fmt"
+
+	"github.com/rangertaha/hxe/internal/log"
 	"github.com/rangertaha/hxe/internal/rdb"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
 
-type Storage struct {
-	db *gorm.DB
+type Service struct {
+	db  *gorm.DB
+	log zerolog.Logger
 }
 
-func NewStorage(db *gorm.DB) *Storage {
-	return &Storage{db: db}
+func NewService(db *gorm.DB) *Service {
+	return &Service{db: db, log: log.With().Logger()}
 }
 
-func (s *Storage) List(req *Service) (res []*Service, err StatusCode) {
-	services := []rdb.Service{}
-	if err := s.db.Find(&services).Error; err != nil {
-		return nil, StatusCode_INTERNAL_SERVER_ERROR
+func (s *Service) List(req *rdb.Service) (services []*rdb.Service, err error) {
+	// Find all services
+	services = []*rdb.Service{}
+	results := s.db.Find(&services)
+	if results.Error != nil {
+		return nil, fmt.Errorf("failed:List() to list services: %w", results.Error)
 	}
-	if len(services) == 0 {
-		return nil, StatusCode_NOT_FOUND
+
+	for _, service := range services {
+		s.log.Info().Msgf("Service: %s", service.Name)
 	}
-	return ToProtoServices(services), StatusCode_OK
+
+	return services, results.Error
 }
 
-func (s *Storage) Get(req *Service) (res *Service, err StatusCode) {
-	service := rdb.Service{}
-	if err := s.db.First(&service, uint(req.Id)).Error; err != nil {
-		return nil, StatusCode_INTERNAL_SERVER_ERROR
-	}
-	if service.ID == 0 {
-		return nil, StatusCode_NOT_FOUND
+func (s *Service) Get(req *rdb.Service) (res *rdb.Service, err error) {
+	// service := &rdb.Service{}
+	if results := s.db.First(res, req.ID); results.Error != nil {
+		return nil, results.Error
 	}
 
-	return ToProtoService(service), StatusCode_OK
+	return res, nil
 }
 
-func (s *Storage) Create(req *Service) (res *Service, err StatusCode) {
-	service := FromProtoService(req)
-	if err := s.db.Create(&service).Error; err != nil {
-		return nil, StatusCode_INTERNAL_SERVER_ERROR
+func (s *Service) Create(service *rdb.Service) (*rdb.Service, error) {
+	// Create te service in the database
+	results := s.db.Create(&service)
+	if results.Error != nil {
+		return nil, results.Error
 	}
 
-	return ToProtoService(service), StatusCode_OK
+	// Return the service
+	return service, nil
 }
 
-func (s *Storage) Update(req *Service) (res *Service, err StatusCode) {
-	service := FromProtoService(req)
-	if err := s.db.Model(&service).Updates(service).Error; err != nil {
-		return nil, StatusCode_INTERNAL_SERVER_ERROR
+func (s *Service) Update(service *rdb.Service) (*rdb.Service, error) {
+	// Create te service in the database
+	results := s.db.Create(&service)
+	if results.Error != nil {
+		return nil, results.Error
 	}
-	return ToProtoService(service), StatusCode_OK
+
+	// Return the service
+	return service, nil
 }
 
-func (s *Storage) Delete(req *Service) (res *Service, err StatusCode) {
-	service := FromProtoService(req)
-	if err := s.db.Delete(&service).Error; err != nil {
-		return nil, StatusCode_INTERNAL_SERVER_ERROR
+func (s *Service) Delete(service *rdb.Service) (*rdb.Service, error) {
+	if results := s.db.Delete(&service); results.Error != nil {
+		return nil, results.Error
 	}
-	return ToProtoService(service), StatusCode_OK
+	return service, nil
 }

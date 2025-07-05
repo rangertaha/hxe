@@ -19,8 +19,6 @@
 package services
 
 import (
-	"fmt"
-
 	"github.com/rangertaha/hxe/internal/modules/services/models"
 )
 
@@ -41,47 +39,47 @@ func (m *Runner) Init() (err error) {
 
 // Runtime CRUD operations in a database
 
-// Load a service
-func (m *Runner) Load(svc *models.Service) {
-	svc.Status = models.ServiceStatus_LOADING
-	m.services[svc.Name] = svc
-}
+// // Load a service
+// func (m *Runner) Load(svc *models.Service) {
+// 	svc.Status = models.ServiceStatus_LOADING
+// 	m.services[svc.Name] = svc
+// }
 
-// List all services
-func (m *Runner) List(svc *models.Service) {
+// // List all services
+// func (m *Runner) List(svc *models.Service) {
 
-}
+// }
 
-// Start a service
-func (m *Runner) Start(svc *models.Service) {
-	svc.Status = models.ServiceStatus_STARTING
-	m.services[svc.Name] = svc
-}
+// // Start a service
+// func (m *Runner) Start(svc *models.Service) {
+// 	svc.Status = models.ServiceStatus_STARTING
+// 	m.services[svc.Name] = svc
+// }
 
-// Stop a service
-func (m *Runner) Stop(svc *models.Service) {
-	svc.Status = models.ServiceStatus_STOPPING
-	m.services[svc.Name] = svc
-}
+// // Stop a service
+// func (m *Runner) Stop(svc *models.Service) {
+// 	svc.Status = models.ServiceStatus_STOPPING
+// 	m.services[svc.Name] = svc
+// }
 
-// Restart a service
-func (m *Runner) Restart(svc *models.Service) {
-	svc.Status = models.ServiceStatus_RESTARTING
-	m.services[svc.Name] = svc
-}
+// // Restart a service
+// func (m *Runner) Restart(svc *models.Service) {
+// 	svc.Status = models.ServiceStatus_RESTARTING
+// 	m.services[svc.Name] = svc
+// }
 
-// Status of a service
-func (m *Runner) Status(svc *models.Service) {
-	svc.Status = models.ServiceStatus_RUNNING
-	m.services[svc.Name] = svc
-}
+// // Status of a service
+// func (m *Runner) Status(svc *models.Service) {
+// 	svc.Status = models.ServiceStatus_RUNNING
+// 	m.services[svc.Name] = svc
+// }
 
-// Log a service
-func (m *Runner) Log(svc *models.Service) {
-	fmt.Println("log:service")
+// // Log a service
+// func (m *Runner) Log(svc *models.Service) {
+// 	fmt.Println("log:service")
 
-}
+// }
 
-func (m *Runner) Shell(svc *models.Service) {
-	fmt.Println("shell:service")
-}
+// func (m *Runner) Shell(svc *models.Service) {
+// 	fmt.Println("shell:service")
+// }

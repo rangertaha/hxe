@@ -90,8 +90,8 @@ type Service struct {
 	Description string `json:"desc" gorm:"column:description"`
 
 	// Runtime configurations
-	User      int    `json:"user" gorm:"column:user"`
-	Group     int    `json:"group" gorm:"column:group"`
+	User      string `json:"user" gorm:"column:user"`
+	Group     string `json:"group" gorm:"column:group"`
 	Directory string `json:"cwd" gorm:"column:dir"`
 	PreExec   string `json:"preExec" gorm:"column:preExec"`
 	CmdExec   string `json:"cmdExec" gorm:"column:cmdExec"`
@@ -99,14 +99,15 @@ type Service struct {
 	Autostart bool   `json:"autostart"`
 	Retries   int    `json:"retries"`
 	Enabled   bool   `json:"enabled"`
+	Error     string `json:"error" gorm:"column:error"`
 
 	// Runtime Status
-	PID       int                `json:"pid" gorm:"column:pid"`
-	ExitCode  int                `json:"exitCode" gorm:"column:exit"`
-	StartTime int64              `json:"startTime" gorm:"column:started"`
-	EndTime   int64              `json:"endTime" gorm:"column:ended"`
-	Uptime    time.Duration      `json:"uptime" gorm:"column:uptime"`
-	Status    ServiceStatus      `json:"status"`
+	PID     int           `json:"pid" gorm:"column:pid"`
+	Exit    int           `json:"exit" gorm:"column:exit"`
+	Started int64         `json:"started" gorm:"column:started"`
+	Ended   int64         `json:"ended" gorm:"column:ended"`
+	Uptime  time.Duration `json:"uptime" gorm:"column:uptime"`
+	Status  ServiceStatus `json:"status"`
 	// Metrics   map[string]float64 `json:"metrics" gorm:"serialize:json"`
 
 	// Relations
