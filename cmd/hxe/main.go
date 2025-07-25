@@ -22,80 +22,50 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/rangertaha/hxe/internal"
-	"github.com/rangertaha/hxe/internal/config"
-	"github.com/rangertaha/hxe/internal/engine"
-	"github.com/rangertaha/hxe/pkg/client"
+	"github.com/rangertaha/hxe/internal/log"
+	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v3"
 )
 
-var (
-	CfgOption *config.Config
-	HxeConfig *config.Config
-	newAgent  *engine.Agent
-	hxeClient *client.Client
-	serverURL string
-	username  string
-	password  string
-	err       error
-)
+// var (
+// 	CfgOption *config.Config
+// 	HxeConfig *config.Config
+// 	newAgent  *agent.Agent
+// 	hxeClient *client.Client
+// 	serverURL string
+// 	username  string
+// 	password  string
+// 	err       error
+// )
 
+func init() {
+	log.SetGlobalLevel(zerolog.ErrorLevel)
+}
+	
 func main() {
 	app := &cli.Command{
 		Name:                  "hxe",
-		Usage:                 "Hxe task execution tool",
-		Description:           `Hxe task execution tool`,
+		Usage:                 "Hxe Host-based Process Execution Manager",
+		Description:           `Hxe Host-based Process Execution Manager`,
 		Version:               internal.VERSION,
 		Authors:               []any{"Rangertaha"},
 		Copyright:             "Rangertaha",
 		EnableShellCompletion: true,
 		Suggest:               true,
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "config",
-				Aliases: []string{"c"},
-				Hidden:  false,
-				Usage:   "Configuration from `FILE`",
-			},
 			&cli.BoolFlag{
 				Name:   "debug",
 				Value:  false,
 				Hidden: false,
 				Usage:  "Log debug messages for development",
-			},
-			&cli.StringFlag{
-				Name:        "username",
-				Aliases:     []string{"u"},
-				Value:       "admin",
-				Hidden:      false,
-				Usage:       "Username for authentication",
-				Destination: &username,
-			},
-			&cli.StringFlag{
-				Name:        "password",
-				Aliases:     []string{"p"},
-				Value:       "password",
-				Hidden:      false,
-				Usage:       "Password for authentication",
-				Destination: &password,
-			},
-			&cli.StringFlag{
-				Name:        "url",
-				Value:       "http://0.0.0.0:9090",
-				Hidden:      false,
-				Usage:       "Hxe API server URL",
-				Destination: &serverURL,
+				Action: nil,
 			},
 		},
 		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-			// Load configuration file
-			cliOptions := config.CliOptions(ctx, cmd)
-
-			// Create new config
-			if HxeConfig, err = config.New(cliOptions); err != nil {
-				return ctx, err
+			if cmd.Bool("debug") {
+				log.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
 			return ctx, nil
@@ -105,21 +75,8 @@ func main() {
 			return nil
 		},
 		Commands: []*cli.Command{
-			{
-				Name:        "server",
-				Usage:       "Start the Hxe server",
-				Description: `Start the Hxe server.`,
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					// Create new agent
-					if newAgent, err = engine.New(HxeConfig); err != nil {
-						return err
-					}
-
-					// Start the agent
-					return newAgent.Start()
-				},
-			},
-			serviceCmd,
+			serverCmd,
+			programCmd,
 		},
 	}
 
@@ -127,21 +84,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-func strToUint(str string) uint {
-	if u, err := strconv.ParseUint(str, 10, 0); err == nil {
-		return uint(u)
-	}
-	return 0
-}
-
-func strsToUints(strings []string) []uint {
-	var uints []uint
-	for _, str := range strings {
-		if u, err := strconv.ParseUint(str, 10, 0); err == nil {
-			uints = append(uints, uint(u))
-		}
-	}
-	return uints
 }

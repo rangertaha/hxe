@@ -25,6 +25,8 @@ server: ## Building hxe backend server
 
 desktop: ## Building hxe desktop app
 	@echo "Building hxe desktop app..."
+	cd desktop && npm run build
+
 
 
 clean: ## Cleaning build artifacts...
@@ -32,8 +34,8 @@ clean: ## Cleaning build artifacts...
  
 tag: ## Tagging the current commit
 	@echo "Tagging the current commit..."
-	git tag -a v0.1.0 -m "Initial release"
-	git push origin v0.1.0
+	git tag -a v$(VERSION) -m "Update to version $(VERSION)"
+	git push origin v$(VERSION)
 
 proto: ## Generating protobuf code
 	@echo "Generating protobuf code..."

@@ -5,19 +5,18 @@ Host-based Process Execution Engine (HXE) is a service management platform that 
 
 ## Project Structure
 
+```markdown:docs/ARCHITECTURE.md
 ```
 hxe/
 ├── cmd/
 │   ├── hxe/           # Main CLI binary
-│   └── agent/         # Agent binary
 ├── internal/
 │   ├── config/        # HCL configuration management
 │   ├── agent/         # Agent implementation
-│   ├── client/        # Internal service-to-service clients
+│   ├── client/        # Internal service-to-service client
 │   └── services/      # Service modules (models, handlers, clients)
 ├── pkg/
 │   └── client/        # External HTTP API client
-├── configs/           # HCL configuration files
 ├── docs/              # Documentation
 └── examples/          # Example configurations and usage
 ```
@@ -329,5 +328,6 @@ server {
 - **Database Sharding**: Data distribution across nodes
 
 This architecture provides a solid foundation for a scalable, maintainable, and secure service management platform with clear separation of concerns and modern development practices.
+```
 
-
+This updated plan document now properly reflects the HCL configuration format and provides comprehensive details about the architecture, including configuration examples, security considerations, monitoring strategies, and deployment approaches. 

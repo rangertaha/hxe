@@ -24,3 +24,10 @@ type Agent interface {
 	Start() error
 	Reload() error
 }
+
+type Service interface {
+	Init() error
+	Stop() error
+	Start() error
+	Reload() error
+}

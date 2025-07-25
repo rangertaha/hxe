@@ -18,18 +18,33 @@
 
 package config
 
-import (
-	"fmt"
-	"os"
-	"path/filepath"
-)
+// import (
+// 	"context"
+// 	"fmt"
+// 	"os"
+// 	"path/filepath"
 
-const (
-	CONFIG_DIR      = "hxe"
-	CONFIG_FILE     = "config.hcl"
-	PROGRAMS_DIR    = "programs"
-	DEFAULT_SUBJECT = "hxe"
-)
+// 	"github.com/hashicorp/hcl/v2"
+// 	"github.com/hashicorp/hcl/v2/hclsimple"
+// 	"github.com/nats-io/nats.go"
+// 	"github.com/rangertaha/hxe/internal"
+// 	"github.com/rangertaha/hxe/internal/db"
+// 	"github.com/rangertaha/hxe/internal/log"
+// 	"gorm.io/driver/sqlite"
+// 	"gorm.io/gorm"
+
+// 	_ "embed"
+
+// 	"github.com/rs/zerolog"
+// 	"github.com/urfave/cli/v3"
+// )
+
+// const (
+// 	CONFIG_DIR      = "hxe"
+// 	CONFIG_FILE     = "config.hcl"
+// 	PROGRAMS_DIR    = "programs"
+// 	DEFAULT_SUBJECT = "hxe"
+// )
 
 // var (
 // 	//go:embed config.hcl
@@ -40,7 +55,7 @@ const (
 // )
 
 // type (
-// 	Config struct {
+// 	AgentConfig struct {
 // 		ID      string `hcl:"id,optional"`
 // 		Debug   bool   `hcl:"debug,optional"`
 // 		Version string `hcl:"version,optional"`
@@ -50,12 +65,19 @@ const (
 // 		configFile string
 // 		Directory  string `hcl:"directory,optional"`
 
-// 		Server   Server    `hcl:"server,block"`
-// 		Services []Service `hcl:"service,block"`
+// 		Server   Server     `hcl:"server,block"`
+// 		Services []*Service `hcl:"service,block"`
+// 	}
+// 	ClientConfig struct {
+// 		Clients  []*Client  `hcl:"client,block"`
+// 	}
+// 	ProgramConfig struct {
+// 		Programs  []*Program  `hcl:"program,block"`
 // 	}
 // 	Service struct {
-// 		ID        string   `hcl:"id,label"`
-// 		Directory string   `hcl:"directory,optional"`
+// 		ID        string `hcl:"id,label"`
+// 		Directory string `hcl:"directory,optional"`
+// 		Conn      *nats.Conn
 // 		Config    hcl.Body `hcl:"config,remain"`
 // 	}
 // )
@@ -66,8 +88,8 @@ const (
 // // }
 
 // // New creates a new configuration
-// func New(options ...func(*Config) error) (*Config, error) {
-// 	s := &Config{
+// func NewAgentConfig(options ...func(*AgentConfig) error) (*AgentConfig, error) {
+// 	s := &AgentConfig{
 // 		Banner:  true,
 // 		Debug:   false,
 // 		Version: internal.VERSION,
@@ -92,8 +114,8 @@ const (
 // 	return s, nil
 // }
 
-// func CliOptions(ctx context.Context, cmd *cli.Command) func(c *Config) error {
-// 	return func(c *Config) error {
+// func AgentCliOptions(ctx context.Context, cmd *cli.Command) func(c *AgentConfig) error {
+// 	return func(c *AgentConfig) error {
 // 		if cmd.String("config") != "" {
 // 			// if config file is provided, use it
 // 			c.configFile = cmd.String("config")
@@ -110,8 +132,8 @@ const (
 // 	}
 // }
 
-// func FileOption(path string) func(*Config) error {
-// 	return func(c *Config) error {
+// func AgentFileOption(path string) func(*AgentConfig) error {
+// 	return func(c *AgentConfig) error {
 // 		if path == "" {
 // 			return fmt.Errorf("config file path is required")
 // 		}
@@ -125,12 +147,12 @@ const (
 // 		// 		c.ConfigFile = path
 // 		// 	}
 // 		// }
-// 		return nil
+// 		return nil		
 // 	}
 // }
 
-// func DefaultOptions() func(*Config) error {
-// 	return func(c *Config) error {
+// func AgentDefaultOptions() func(*AgentConfig) error {
+// 	return func(c *AgentConfig) error {
 // 		if c.Directory == "" {
 // 			userConfigDir, err := os.UserConfigDir()
 // 			if err != nil {
@@ -151,7 +173,31 @@ const (
 // 	}
 // }
 
-// func (c *Config) Load() (err error) {
+// func createFileIfNotExists(filename string, contents []byte) error {
+// 	// Check if file exists
+// 	_, err := os.Stat(filename)
+// 	if os.IsNotExist(err) {
+// 		// Create directory if it doesn't exist
+// 		dir := filepath.Dir(filename)
+// 		if err := os.MkdirAll(dir, 0755); err != nil {
+// 			return fmt.Errorf("failed to create directory: %w", err)
+// 		}
+
+// 		// Write default config to file
+// 		if err := os.WriteFile(filename, contents, 0644); err != nil {
+// 			return fmt.Errorf("failed to create file: %w", err)
+// 		}
+
+// 		fmt.Printf("Created file: %s\n", filename)
+
+// 	} else if err != nil {
+// 		return fmt.Errorf("error checking file: %w", err)
+// 	}
+
+// 	return nil
+// }
+
+// func (c *AgentConfig) Load() (err error) {
 // 	// Create config file if it doesn't exist
 // 	if c.configFile == "" {
 // 		c.configFile = filepath.Join(c.Directory, CONFIG_FILE)
@@ -167,7 +213,8 @@ const (
 // 	return
 // }
 
-// func (c *Config) LoadDatabase() (err error) {
+
+// func (c *AgentConfig) LoadDatabase() (err error) {
 // 	log.Info().Msg("setting up database")
 
 // 	dbFile := filepath.Join(c.Directory, "agent.db")
@@ -184,27 +231,3 @@ const (
 
 // 	return
 // }
-
-func createFileIfNotExists(filename string, contents []byte) error {
-	// Check if file exists
-	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		// Create directory if it doesn't exist
-		dir := filepath.Dir(filename)
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("failed to create directory: %w", err)
-		}
-
-		// Write default config to file
-		if err := os.WriteFile(filename, contents, 0644); err != nil {
-			return fmt.Errorf("failed to create file: %w", err)
-		}
-
-		fmt.Printf("Created file: %s\n", filename)
-
-	} else if err != nil {
-		return fmt.Errorf("error checking file: %w", err)
-	}
-
-	return nil
-}
